@@ -428,6 +428,9 @@ data_df_log <- left_join(input_data_log, input_metadata, by = "ident")
 corres <- 
   taxa_table %>% 
   select(Phyla_corres = ch_feces_phylum_ASVbased_Y1, 
+         Class_corres = ch_feces_class_ASVbased_Y1, 
+         Order_corres = ch_feces_order_ASVbased_Y1, 
+         Family_corres = ch_feces_family_ASVbased_Y1, 
          Outcome = ch_feces_genus_ASVbased_Y1) %>%
   filter(Outcome %in% genera_linear) %>%
   distinct(Outcome, .keep_all = TRUE)
@@ -497,7 +500,7 @@ rm(terms, formula, model,
 
 table_log <-                                                                    # Ajout variable de la correspondance en phyla
   left_join(table_log, corres, by = "Outcome") %>% 
-  select(Phyla_corres, everything())
+  select(Phyla_corres, Class_corres, Order_corres, Family_corres, everything())
 
 table_log <- table_log %>%
   select(Phyla_corres, 
@@ -739,3 +742,18 @@ write_xlsx(results_signi,
            path = "4_output/results_genera.xlsx")   # penser à copier coller le tbl_regression complet en plus
 
 save.image("4_output/results_genera.RData")
+
+
+table_log %>% 
+  select(-Pollutants, 
+         -Time_window, 
+         -Pollutants_Time_window, 
+         -sens_beta, 
+         -p_value_shape, 
+         -q_value_shape, 
+         -`q-value`, 
+         -Outcome_rec, 
+         -categorie ) %>%
+  filter(`p-value`<0.0035) %>% 
+  arrange(Outcome, desc(`p-value`)) %>%
+  View()
