@@ -138,8 +138,8 @@ risks_overall <- function(fit, y, Z, covariates) {
     y = y,
     Z = Z,
     X = covariates,
-    qs = seq(0.25, 0.95, by = 0.10),
-    q.fixed = 0.25,
+    qs = seq(0.10, 0.90, by = 0.10),
+    q.fixed = 0.10,
     method = "exact")  # approx utilisé en run 5, exact utilisé en run 6
   return(results)
 }     
@@ -152,7 +152,7 @@ risks_singvar <- function(fit, y, Z, covariates) {
     X = covariates,
     qs.diff = c(0.25, 0.75),
     q.fixed = c(0.25, 0.50, 0.75),
-    method = "exact")
+    method = "exact")  # approx utilisé en run 5, exact utilisé en run 6
   return(results)
 }
 
