@@ -36,14 +36,6 @@ phthalates_vec_t3 <- bdd_alpha %>%
   select(!contains("cat")) %>%
   colnames()
 
-# phthalates_vec_M2 <- bdd_alpha %>% 
-#   select(all_of(phthalates_vec)) %>%
-#   select(contains("M2"))%>%
-#   select(!contains(c("MEOHP", "MECPP", "MEHHP", "MEHP", "MMCHP",     
-#                      "ohMiNP", "oxoMiNP", "cxMiNP"))) %>%  
-#   select(!contains("cat")) %>%
-#   colnames()
-
 phthalates_vec_Y1 <- bdd_alpha %>% 
   select(all_of(phthalates_vec)) %>%
   select(contains("Y1"))%>%
@@ -78,17 +70,6 @@ bkmr_t3 <- function(outcome) {
   return(results_t3)
 }
 
-# bkmr_M2 <- function(outcome) {
-#   set.seed(111)
-#   results_M2 <- kmbayes(    # modèle sans les variables catégorielles "numérisées" / fenetres séparées
-#     y = outcome, 
-#     Z = mixture_alpha_M2, 
-#     X = covariates_alpha_M2, 
-#     iter = 50000,          # mettre 50 000
-#     verbose = FALSE,       # if TRUE, la sortie intermédiaire résumant la progression de l'ajustement du modèle est imprimée
-#     varsel = TRUE)         # if TRUE, we can fit the model with variable selection and estimate the posterior inclusion probability (PIP) for each of the exposures zim
-#   return(results_M2)
-# }
 
 bkmr_Y1 <- function(outcome) {
   set.seed(111)
@@ -145,8 +126,8 @@ risks_overall <- function(fit, y, Z, covariates) {
     y = y,
     Z = Z,
     X = covariates,
-    qs = seq(0.25, 0.95, by = 0.10),
-    q.fixed = 0.25,
+    qs = seq(0.10, 0.90, by = 0.10),
+    q.fixed = 0.10,
     method = "approx")
   return(results)
 }     
@@ -393,18 +374,6 @@ bdd_expo_t3 <- metadata %>%
 keep_expo_t3 <- colnames(bdd_expo_t3[, 2:9])
 bdd_expo_t3[, keep_expo_t3] <- lapply(bdd_expo_t3[, keep_expo_t3], scale)  # standardiser les expositions (diviser par sd)
 colnames(bdd_expo_t3) <- c("ident", keep_expo_t3)
-# 
-# bdd_expo_M2 <- metadata %>%          
-#   select(
-#     ident,
-#     all_of(phthalates_vec_M2))%>%           # variables d'exposition (déjà logtransformé)
-#   select(
-#     ident, 
-#     where(is.numeric))%>%               # conserver que les expositions codées en numérique
-#   na.omit()                             # conserver que les lignes avec toutes les observations completes sans données manquantes 
-# keep_expo_M2 <- colnames(bdd_expo_M2[, 2:7])
-# bdd_expo_M2[, keep_expo_M2] <- lapply(bdd_expo_M2[, keep_expo_M2], scale)  # standardiser les expositions (diviser par sd)
-# colnames(bdd_expo_M2) <- c("ident", keep_expo_M2)
 
 bdd_expo_Y1 <- metadata %>%          
   select(
@@ -438,17 +407,6 @@ outcome_specrich_t3 <- bdd_bkmr_alpha_t3 %>% select(ch_feces_SpecRich_5000_ASV_Y
 outcome_shannon_t3 <- bdd_bkmr_alpha_t3 %>% select(ch_feces_Shannon_5000_ASV_Y1) %>% as.matrix()
 outcome_faith_t3 <- bdd_bkmr_alpha_t3 %>% select(ch_feces_Faith_5000_ASV_Y1) %>% as.matrix()
 
-# bdd_bkmr_alpha_M2 <- 
-#   list(bdd_outcomes_alpha, bdd_covariates_i, bdd_expo_M2) %>%
-#   reduce(left_join, by = "ident") %>%
-#   na.omit()
-# 
-# mixture_alpha_M2 <- bdd_bkmr_alpha_M2 %>% select(all_of(keep_expo_M2)) %>% as.matrix()
-# covariates_alpha_M2 <- bdd_bkmr_alpha_M2 %>% select(all_of(keep_covar)) %>% as.matrix()
-# outcome_specrich_M2 <- bdd_bkmr_alpha_M2 %>% select(ch_feces_SpecRich_5000_ASV_Y1) %>% as.matrix()
-# outcome_shannon_M2 <- bdd_bkmr_alpha_M2 %>% select(ch_feces_Shannon_5000_ASV_Y1) %>% as.matrix()
-# outcome_faith_M2 <- bdd_bkmr_alpha_M2 %>% select(ch_feces_Faith_5000_ASV_Y1) %>% as.matrix()
-
 bdd_bkmr_alpha_Y1 <- 
   list(bdd_outcomes_alpha, bdd_covariates_i, bdd_expo_Y1) %>%
   reduce(left_join, by = "ident") %>%
@@ -464,24 +422,23 @@ outcome_faith_Y1 <- bdd_bkmr_alpha_Y1 %>% select(ch_feces_Faith_5000_ASV_Y1) %>%
 # Fit BKMR ----
 ## Run 3 ----  
 # Spécifier le planificateur future et le nombre de noyaux à utiliser
-# plan(multisession)
-# ncores <- availableCores() # ou spécifier le nombre de noyaux à utiliser
-# 
-# # Utiliser future_lapply pour exécuter les appels bkmr en parallèle pour les 3 outcomes
-# results_bkmr_phthalates_alpha_t2 <- future_lapply(list(outcome_specrich_t2, outcome_shannon_t2, outcome_faith_t2), bkmr_t2, future.seed = TRUE)
-# results_bkmr_phthalates_alpha_t3 <- future_lapply(list(outcome_specrich_t3, outcome_shannon_t3, outcome_faith_t3), bkmr_t3, future.seed = TRUE)
-# results_bkmr_phthalates_alpha_M2 <- future_lapply(list(outcome_specrich_M2, outcome_shannon_M2, outcome_faith_M2), bkmr_M2, future.seed = TRUE)
-# results_bkmr_phthalates_alpha_Y1 <- future_lapply(list(outcome_specrich_Y1, outcome_shannon_Y1, outcome_faith_Y1), bkmr_Y1, future.seed = TRUE)
-# 
-# list <- list(results_bkmr_phthalates_alpha_t2, results_bkmr_phthalates_alpha_t3, results_bkmr_phthalates_alpha_M2, results_bkmr_phthalates_alpha_Y1)
-# save(list, 
-#      file = "4_output/phthalates/bkmr_phthalates/Run3 (ms)/resuts_bkmr_phthalates_alpha_run3ms.RData")
+plan(multisession)
+ncores <- availableCores() # ou spécifier le nombre de noyaux à utiliser
+
+# Utiliser future_lapply pour exécuter les appels bkmr en parallèle pour les 3 outcomes
+results_bkmr_phthalates_alpha_t2 <- future_lapply(list(outcome_specrich_t2, outcome_shannon_t2, outcome_faith_t2), bkmr_t2, future.seed = TRUE)
+results_bkmr_phthalates_alpha_t3 <- future_lapply(list(outcome_specrich_t3, outcome_shannon_t3, outcome_faith_t3), bkmr_t3, future.seed = TRUE)
+results_bkmr_phthalates_alpha_Y1 <- future_lapply(list(outcome_specrich_Y1, outcome_shannon_Y1, outcome_faith_Y1), bkmr_Y1, future.seed = TRUE)
+
+list <- list(results_bkmr_phthalates_alpha_t2 = results_bkmr_phthalates_alpha_t2, 
+             results_bkmr_phthalates_alpha_t3 = results_bkmr_phthalates_alpha_t3, 
+             results_bkmr_phthalates_alpha_Y1 = results_bkmr_phthalates_alpha_Y1)
+save(list,
+     file = "4_output/bkmr/Run3 (ms)/resuts_bkmr_phthalates_alpha_run3ms.RData")
+
 load("4_output/bkmr/Run3 (ms)/resuts_bkmr_phthalates_alpha_run3ms.RData")
-names(list) <- c("results_bkmr_phthalates_alpha_t2", 
-                 "results_bkmr_phthalates_alpha_t3", 
-                 "results_bkmr_phthalates_alpha_M2", 
-                 "results_bkmr_phthalates_alpha_Y1")
-list2env(list, envir = .GlobalEnv)
+
+
 ## Run 4 ----
 # Spécifier le planificateur future et le nombre de noyaux à utiliser
 # plan(multisession)
@@ -490,17 +447,19 @@ list2env(list, envir = .GlobalEnv)
 # # Utiliser future_lapply pour exécuter les appels bkmr en parallèle pour les 3 outcomes
 # results_bkmr_phthalates_alpha_t2_run4 <- future_lapply(list(outcome_specrich_t2, outcome_shannon_t2, outcome_faith_t2), bkmr_t2, future.seed = TRUE)
 # results_bkmr_phthalates_alpha_t3_run4 <- future_lapply(list(outcome_specrich_t3, outcome_shannon_t3, outcome_faith_t3), bkmr_t3, future.seed = TRUE)
-# results_bkmr_phthalates_alpha_M2_run4 <- future_lapply(list(outcome_specrich_M2, outcome_shannon_M2, outcome_faith_M2), bkmr_M2, future.seed = TRUE)
 # results_bkmr_phthalates_alpha_Y1_run4 <- future_lapply(list(outcome_specrich_Y1, outcome_shannon_Y1, outcome_faith_Y1), bkmr_Y1, future.seed = TRUE)
 # 
 # list_run4 <- list(results_bkmr_phthalates_alpha_t2_run4, 
 #                   results_bkmr_phthalates_alpha_t3_run4, 
-#                   results_bkmr_phthalates_alpha_M2_run4, 
 #                   results_bkmr_phthalates_alpha_Y1_run4)
 # save(list_run4, 
 #      file = "4_output/phthalates/bkmr_phthalates/Run4 (ms)/resuts_bkmr_phthalates_alpha_run4.RData")
 
 # extraire les résultats ----
+results_bkmr_phthalates_alpha_t2 <- list[[1]]
+results_bkmr_phthalates_alpha_t3 <- list[[2]]
+results_bkmr_phthalates_alpha_Y1 <- list[[4]]
+
 results_bkmr_phthalates_rich_t2 <- results_bkmr_phthalates_alpha_t2[[1]]
 results_bkmr_phthalates_sha_t2 <- results_bkmr_phthalates_alpha_t2[[2]]
 results_bkmr_phthalates_fai_t2 <- results_bkmr_phthalates_alpha_t2[[3]]
@@ -508,10 +467,6 @@ results_bkmr_phthalates_fai_t2 <- results_bkmr_phthalates_alpha_t2[[3]]
 results_bkmr_phthalates_rich_t3 <- results_bkmr_phthalates_alpha_t3[[1]]
 results_bkmr_phthalates_sha_t3 <- results_bkmr_phthalates_alpha_t3[[2]]
 results_bkmr_phthalates_fai_t3 <- results_bkmr_phthalates_alpha_t3[[3]]
-
-# results_bkmr_phthalates_rich_M2 <- results_bkmr_phthalates_alpha_M2[[1]]
-# results_bkmr_phthalates_sha_M2 <- results_bkmr_phthalates_alpha_M2[[2]]
-# results_bkmr_phthalates_fai_M2 <- results_bkmr_phthalates_alpha_M2[[3]]
 
 results_bkmr_phthalates_rich_Y1 <- results_bkmr_phthalates_alpha_Y1[[1]]
 results_bkmr_phthalates_sha_Y1 <- results_bkmr_phthalates_alpha_Y1[[2]]
@@ -556,8 +511,6 @@ TracePlot_group(results_bkmr_phthalates_rich_t2, results_bkmr_phthalates_sha_t2,
                 titre = "Model convergence Phthalates BKMR t2, Specific richness, Shannon, Faith (de haut en bas)")
 TracePlot_group(results_bkmr_phthalates_rich_t3, results_bkmr_phthalates_sha_t3, results_bkmr_phthalates_fai_t3, 
                 titre = "Model convergence Phthalates BKMR t3, Specific richness, Shannon, Faith (de haut en bas)")
-TracePlot_group(results_bkmr_phthalates_rich_M2, results_bkmr_phthalates_sha_M2, results_bkmr_phthalates_fai_M2, 
-                titre = "Model convergence Phthalates BKMR M2, Specific richness, Shannon, Faith (de haut en bas)")
 TracePlot_group(results_bkmr_phthalates_rich_Y1, results_bkmr_phthalates_sha_Y1, results_bkmr_phthalates_fai_Y1, 
                 titre = "Model convergence Phthalates BKMR Y1, Specific richness, Shannon, Faith (de haut en bas)")
 par(mfrow=c(1,1))
@@ -567,8 +520,6 @@ par(mfrow=c(1,1))
 #                 titre = "Model convergence Phthalates BKMR t2, Specific richness, Shannon, Faith (de haut en bas)")
 # TracePlot_group(results_bkmr_phthalates_rich_t3_run4, results_bkmr_phthalates_sha_t3_run4, results_bkmr_phthalates_fai_t3_run4, 
 #                 titre = "Model convergence Phthalates BKMR t3, Specific richness, Shannon, Faith (de haut en bas)")
-# TracePlot_group(results_bkmr_phthalates_rich_M2_run4, results_bkmr_phthalates_sha_M2_run4, results_bkmr_phthalates_fai_M2_run4, 
-#                 titre = "Model convergence Phthalates BKMR M2, Specific richness, Shannon, Faith (de haut en bas)")
 # TracePlot_group(results_bkmr_phthalates_rich_Y1_run4, results_bkmr_phthalates_sha_Y1_run4, results_bkmr_phthalates_fai_Y1_run4, 
 #                 titre = "Model convergence Phthalates BKMR Y1, Specific richness, Shannon, Faith (de haut en bas)")
 # par(mfrow=c(1,1))
@@ -577,52 +528,38 @@ par(mfrow=c(1,1))
 # PIP ----
 pip_phthalates_alpha_t2 <- pip_results(results_bkmr_phthalates_rich_t2, results_bkmr_phthalates_sha_t2, results_bkmr_phthalates_fai_t2)
 pip_phthalates_alpha_t3 <- pip_results(results_bkmr_phthalates_rich_t3, results_bkmr_phthalates_sha_t3, results_bkmr_phthalates_fai_t3)
-pip_phthalates_alpha_M2 <- pip_results(results_bkmr_phthalates_rich_M2, results_bkmr_phthalates_sha_M2, results_bkmr_phthalates_fai_M2)
 pip_phthalates_alpha_Y1 <- pip_results(results_bkmr_phthalates_rich_Y1, results_bkmr_phthalates_sha_Y1, results_bkmr_phthalates_fai_Y1)
 # 
 # pip_phthalates_alpha_t2_run4 <- pip_results(results_bkmr_phthalates_rich_t2_run4, results_bkmr_phthalates_sha_t2_run4, results_bkmr_phthalates_fai_t2_run4)
 # pip_phthalates_alpha_t3_run4 <- pip_results(results_bkmr_phthalates_rich_t3_run4, results_bkmr_phthalates_sha_t3_run4, results_bkmr_phthalates_fai_t3_run4)
-# pip_phthalates_alpha_M2_run4 <- pip_results(results_bkmr_phthalates_rich_M2_run4, results_bkmr_phthalates_sha_M2_run4, results_bkmr_phthalates_fai_M2_run4)
 # pip_phthalates_alpha_Y1_run4 <- pip_results(results_bkmr_phthalates_rich_Y1_run4, results_bkmr_phthalates_sha_Y1_run4, results_bkmr_phthalates_fai_Y1_run4)
 
 
 # Overall ----
-# results_bkmr_overall_phthalates_rich_t2 <- risks_overall(results_bkmr_phthalates_rich_t2, outcome_specrich_t2, mixture_alpha_t2, covariates_alpha_t2)
-# results_bkmr_overall_phthalates_sha_t2 <- risks_overall(results_bkmr_phthalates_sha_t2, outcome_shannon_t2, mixture_alpha_t2, covariates_alpha_t2)
-# results_bkmr_overall_phthalates_fai_t2 <- risks_overall(results_bkmr_phthalates_fai_t2, outcome_faith_t2, mixture_alpha_t2, covariates_alpha_t2)
-# 
-# results_bkmr_overall_phthalates_rich_t3 <- risks_overall(results_bkmr_phthalates_rich_t3, outcome_specrich_t3, mixture_alpha_t3, covariates_alpha_t3)
-# results_bkmr_overall_phthalates_sha_t3 <- risks_overall(results_bkmr_phthalates_sha_t3, outcome_shannon_t3, mixture_alpha_t3, covariates_alpha_t3)
-# results_bkmr_overall_phthalates_fai_t3 <- risks_overall(results_bkmr_phthalates_fai_t3, outcome_faith_t3, mixture_alpha_t3, covariates_alpha_t3)
-# 
-# results_bkmr_overall_phthalates_rich_M2 <- risks_overall(results_bkmr_phthalates_rich_M2, outcome_specrich_M2, mixture_alpha_M2, covariates_alpha_M2)
-# results_bkmr_overall_phthalates_sha_M2 <- risks_overall(results_bkmr_phthalates_sha_M2, outcome_shannon_M2, mixture_alpha_M2, covariates_alpha_M2)
-# results_bkmr_overall_phthalates_fai_M2 <- risks_overall(results_bkmr_phthalates_fai_M2, outcome_faith_M2, mixture_alpha_M2, covariates_alpha_M2)
-# 
-# results_bkmr_overall_phthalates_rich_Y1 <- risks_overall(results_bkmr_phthalates_rich_Y1, outcome_specrich_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
-# results_bkmr_overall_phthalates_sha_Y1 <- risks_overall(results_bkmr_phthalates_sha_Y1, outcome_shannon_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
-# results_bkmr_overall_phthalates_fai_Y1 <- risks_overall(results_bkmr_phthalates_fai_Y1, outcome_faith_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
-# 
-# list_overall <- list(results_bkmr_overall_phthalates_rich_t2, results_bkmr_overall_phthalates_sha_t2, results_bkmr_overall_phthalates_fai_t2, 
-#                      results_bkmr_overall_phthalates_rich_t3, results_bkmr_overall_phthalates_sha_t3, results_bkmr_overall_phthalates_fai_t3, 
-#                      results_bkmr_overall_phthalates_rich_M2, results_bkmr_overall_phthalates_sha_M2, results_bkmr_overall_phthalates_fai_M2, 
-#                      results_bkmr_overall_phthalates_rich_Y1, results_bkmr_overall_phthalates_sha_Y1, results_bkmr_overall_phthalates_fai_Y1)
-# save(list_overall, 
-#      file = "4_output/phthalates/bkmr_phthalates/Run3 (ms)/resuts_bkmr_overall_phthalates_alpha_run3ms.RData")
+results_bkmr_overall_phthalates_rich_t2 <- risks_overall(results_bkmr_phthalates_rich_t2, outcome_specrich_t2, mixture_alpha_t2, covariates_alpha_t2)
+results_bkmr_overall_phthalates_sha_t2 <- risks_overall(results_bkmr_phthalates_sha_t2, outcome_shannon_t2, mixture_alpha_t2, covariates_alpha_t2)
+results_bkmr_overall_phthalates_fai_t2 <- risks_overall(results_bkmr_phthalates_fai_t2, outcome_faith_t2, mixture_alpha_t2, covariates_alpha_t2)
+
+results_bkmr_overall_phthalates_rich_t3 <- risks_overall(results_bkmr_phthalates_rich_t3, outcome_specrich_t3, mixture_alpha_t3, covariates_alpha_t3)
+results_bkmr_overall_phthalates_sha_t3 <- risks_overall(results_bkmr_phthalates_sha_t3, outcome_shannon_t3, mixture_alpha_t3, covariates_alpha_t3)
+results_bkmr_overall_phthalates_fai_t3 <- risks_overall(results_bkmr_phthalates_fai_t3, outcome_faith_t3, mixture_alpha_t3, covariates_alpha_t3)
+
+results_bkmr_overall_phthalates_rich_Y1 <- risks_overall(results_bkmr_phthalates_rich_Y1, outcome_specrich_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
+results_bkmr_overall_phthalates_sha_Y1 <- risks_overall(results_bkmr_phthalates_sha_Y1, outcome_shannon_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
+results_bkmr_overall_phthalates_fai_Y1 <- risks_overall(results_bkmr_phthalates_fai_Y1, outcome_faith_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
+
+list_overall <- list(results_bkmr_overall_phthalates_rich_t2 = results_bkmr_overall_phthalates_rich_t2, 
+                     results_bkmr_overall_phthalates_sha_t2 = results_bkmr_overall_phthalates_sha_t2, 
+                     results_bkmr_overall_phthalates_fai_t2 = results_bkmr_overall_phthalates_fai_t2,
+                     results_bkmr_overall_phthalates_rich_t3 = results_bkmr_overall_phthalates_rich_t3, 
+                     results_bkmr_overall_phthalates_sha_t3 = results_bkmr_overall_phthalates_sha_t3, 
+                     results_bkmr_overall_phthalates_fai_t3 = results_bkmr_overall_phthalates_fai_t3,
+                     results_bkmr_overall_phthalates_rich_Y1 = results_bkmr_overall_phthalates_rich_Y1, 
+                     results_bkmr_overall_phthalates_sha_Y1 =results_bkmr_overall_phthalates_sha_Y1, 
+                     results_bkmr_overall_phthalates_fai_Y1 = results_bkmr_overall_phthalates_fai_Y1)
+save(list_overall, 
+      file = "4_output/bkmr/Run3 (ms)/resuts_bkmr_overall_phthalates_alpha_run3ms.RData")
 load("4_output/bkmr/Run3 (ms)/resuts_bkmr_overall_phthalates_alpha_run3ms.RData")
-names(list_overall) <- c("results_bkmr_overall_phthalates_rich_t2", 
-                         "results_bkmr_overall_phthalates_sha_t2", 
-                         "results_bkmr_overall_phthalates_fai_t2", 
-                         "results_bkmr_overall_phthalates_rich_t3", 
-                         "results_bkmr_overall_phthalates_sha_t3", 
-                         "results_bkmr_overall_phthalates_fai_t3", 
-                         "results_bkmr_overall_phthalates_rich_M2", 
-                         "results_bkmr_overall_phthalates_sha_M2", 
-                         "results_bkmr_overall_phthalates_fai_M2", 
-                         "results_bkmr_overall_phthalates_rich_Y1", 
-                         "results_bkmr_overall_phthalates_sha_Y1", 
-                         "results_bkmr_overall_phthalates_fai_Y1")
-list2env(list_overall, envir = .GlobalEnv)
 
 # results_bkmr_overall_phthalates_rich_t2_run4 <- risks_overall(results_bkmr_phthalates_rich_t2_run4, outcome_specrich_t2, mixture_alpha_t2, covariates_alpha_t2)
 # results_bkmr_overall_phthalates_sha_t2_run4 <- risks_overall(results_bkmr_phthalates_sha_t2_run4, outcome_shannon_t2, mixture_alpha_t2, covariates_alpha_t2)
@@ -632,10 +569,6 @@ list2env(list_overall, envir = .GlobalEnv)
 # results_bkmr_overall_phthalates_sha_t3_run4 <- risks_overall(results_bkmr_phthalates_sha_t3_run4, outcome_shannon_t3, mixture_alpha_t3, covariates_alpha_t3)
 # results_bkmr_overall_phthalates_fai_t3_run4 <- risks_overall(results_bkmr_phthalates_fai_t3_run4, outcome_faith_t3, mixture_alpha_t3, covariates_alpha_t3)
 # 
-# results_bkmr_overall_phthalates_rich_M2_run4 <- risks_overall(results_bkmr_phthalates_rich_M2_run4, outcome_specrich_M2, mixture_alpha_M2, covariates_alpha_M2)
-# results_bkmr_overall_phthalates_sha_M2_run4 <- risks_overall(results_bkmr_phthalates_sha_M2_run4, outcome_shannon_M2, mixture_alpha_M2, covariates_alpha_M2)
-# results_bkmr_overall_phthalates_fai_M2_run4 <- risks_overall(results_bkmr_phthalates_fai_M2_run4, outcome_faith_M2, mixture_alpha_M2, covariates_alpha_M2)
-# 
 # results_bkmr_overall_phthalates_rich_Y1_run4 <- risks_overall(results_bkmr_phthalates_rich_Y1_run4, outcome_specrich_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
 # results_bkmr_overall_phthalates_sha_Y1_run4 <- risks_overall(results_bkmr_phthalates_sha_Y1_run4, outcome_shannon_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
 # results_bkmr_overall_phthalates_fai_Y1_run4 <- risks_overall(results_bkmr_phthalates_fai_Y1_run4, outcome_faith_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
@@ -643,7 +576,6 @@ list2env(list_overall, envir = .GlobalEnv)
 # list_overall_run4 <- list(
 #   results_bkmr_overall_phthalates_rich_t2_run4, results_bkmr_overall_phthalates_sha_t2_run4, results_bkmr_overall_phthalates_fai_t2_run4, 
 #   results_bkmr_overall_phthalates_rich_t3_run4, results_bkmr_overall_phthalates_sha_t3_run4, results_bkmr_overall_phthalates_fai_t3_run4,
-#   results_bkmr_overall_phthalates_rich_M2_run4, results_bkmr_overall_phthalates_sha_M2_run4, results_bkmr_overall_phthalates_fai_M2_run4,
 #   results_bkmr_overall_phthalates_rich_Y1_run4, results_bkmr_overall_phthalates_sha_Y1_run4, results_bkmr_overall_phthalates_fai_Y1_run4)
 # save(list_overall_run4, 
 #      file = "4_output/phthalates/bkmr_phthalates/Run4 (ms)/resuts_bkmr_overall_phthalates_alpha_run4.RData")
@@ -658,17 +590,12 @@ list2env(list_overall, envir = .GlobalEnv)
 # results_bkmr_singvar_phthalates_sha_t3 <- risks_singvar(results_bkmr_phthalates_sha_t3, outcome_shannon_t3, mixture_alpha_t3, covariates_alpha_t3)
 # results_bkmr_singvar_phthalates_fai_t3 <- risks_singvar(results_bkmr_phthalates_fai_t3, outcome_faith_t3, mixture_alpha_t3, covariates_alpha_t3)
 # 
-# results_bkmr_singvar_phthalates_rich_M2 <- risks_singvar(results_bkmr_phthalates_rich_M2, outcome_specrich_M2, mixture_alpha_M2, covariates_alpha_M2)
-# results_bkmr_singvar_phthalates_sha_M2 <- risks_singvar(results_bkmr_phthalates_sha_M2, outcome_shannon_M2, mixture_alpha_M2, covariates_alpha_M2)
-# results_bkmr_singvar_phthalates_fai_M2 <- risks_singvar(results_bkmr_phthalates_fai_M2, outcome_faith_M2, mixture_alpha_M2, covariates_alpha_M2)
-# 
 # results_bkmr_singvar_phthalates_rich_Y1 <- risks_singvar(results_bkmr_phthalates_rich_Y1, outcome_specrich_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
 # results_bkmr_singvar_phthalates_sha_Y1 <- risks_singvar(results_bkmr_phthalates_sha_Y1, outcome_shannon_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
 # results_bkmr_singvar_phthalates_fai_Y1 <- risks_singvar(results_bkmr_phthalates_fai_Y1, outcome_faith_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
 # 
 # list_singvar <- list(results_bkmr_singvar_phthalates_rich_t2, results_bkmr_singvar_phthalates_sha_t2, results_bkmr_singvar_phthalates_fai_t2, 
 #                      results_bkmr_singvar_phthalates_rich_t3, results_bkmr_singvar_phthalates_sha_t3, results_bkmr_singvar_phthalates_fai_t3, 
-#                      results_bkmr_singvar_phthalates_rich_M2, results_bkmr_singvar_phthalates_sha_M2, results_bkmr_singvar_phthalates_fai_M2, 
 #                      results_bkmr_singvar_phthalates_rich_Y1, results_bkmr_singvar_phthalates_sha_Y1, results_bkmr_singvar_phthalates_fai_Y1)
 # save(list_singvar, 
 #      file = "4_output/phthalates/bkmr_phthalates/Run3 (ms)/resuts_bkmr_singvar_phthalates_alpha_run3ms.RData")
@@ -680,9 +607,6 @@ names(list_singvar) <- c("results_bkmr_singvar_phthalates_rich_t2",
                          "results_bkmr_singvar_phthalates_rich_t3", 
                          "results_bkmr_singvar_phthalates_sha_t3", 
                          "results_bkmr_singvar_phthalates_fai_t3", 
-                         "results_bkmr_singvar_phthalates_rich_M2", 
-                         "results_bkmr_singvar_phthalates_sha_M2", 
-                         "results_bkmr_singvar_phthalates_fai_M2", 
                          "results_bkmr_singvar_phthalates_rich_Y1", 
                          "results_bkmr_singvar_phthalates_sha_Y1", 
                          "results_bkmr_singvar_phthalates_fai_Y1")
@@ -696,10 +620,6 @@ list2env(list_singvar, envir = .GlobalEnv)
 # results_bkmr_singvar_phthalates_sha_t3_run4 <- risks_singvar(results_bkmr_phthalates_sha_t3_run4, outcome_shannon_t3, mixture_alpha_t3, covariates_alpha_t3)
 # results_bkmr_singvar_phthalates_fai_t3_run4 <- risks_singvar(results_bkmr_phthalates_fai_t3_run4, outcome_faith_t3, mixture_alpha_t3, covariates_alpha_t3)
 # 
-# results_bkmr_singvar_phthalates_rich_M2_run4 <- risks_singvar(results_bkmr_phthalates_rich_M2_run4, outcome_specrich_M2, mixture_alpha_M2, covariates_alpha_M2)
-# results_bkmr_singvar_phthalates_sha_M2_run4 <- risks_singvar(results_bkmr_phthalates_sha_M2_run4, outcome_shannon_M2, mixture_alpha_M2, covariates_alpha_M2)
-# results_bkmr_singvar_phthalates_fai_M2_run4 <- risks_singvar(results_bkmr_phthalates_fai_M2_run4, outcome_faith_M2, mixture_alpha_M2, covariates_alpha_M2)
-# 
 # results_bkmr_singvar_phthalates_rich_Y1_run4 <- risks_singvar(results_bkmr_phthalates_rich_Y1_run4, outcome_specrich_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
 # results_bkmr_singvar_phthalates_sha_Y1_run4 <- risks_singvar(results_bkmr_phthalates_sha_Y1_run4, outcome_shannon_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
 # results_bkmr_singvar_phthalates_fai_Y1_run4 <- risks_singvar(results_bkmr_phthalates_fai_Y1_run4, outcome_faith_Y1, mixture_alpha_Y1, covariates_alpha_Y1)
@@ -707,7 +627,6 @@ list2env(list_singvar, envir = .GlobalEnv)
 # list_singvar_run4 <- list(
 #   results_bkmr_singvar_phthalates_rich_t2_run4, results_bkmr_singvar_phthalates_sha_t2_run4, results_bkmr_singvar_phthalates_fai_t2_run4, 
 #   results_bkmr_singvar_phthalates_rich_t3_run4, results_bkmr_singvar_phthalates_sha_t3_run4, results_bkmr_singvar_phthalates_fai_t3_run4,
-#   results_bkmr_singvar_phthalates_rich_M2_run4, results_bkmr_singvar_phthalates_sha_M2_run4, results_bkmr_singvar_phthalates_fai_M2_run4,
 #   results_bkmr_singvar_phthalates_rich_Y1_run4, results_bkmr_singvar_phthalates_sha_Y1_run4, results_bkmr_singvar_phthalates_fai_Y1_run4)
 # save(list_singvar_run4, 
 #      file = "4_output/phthalates/bkmr_phthalates/Run4 (ms)/resuts_bkmr_singvar_phthalates_alpha_run4ms.RData")
@@ -725,10 +644,6 @@ results_bkmr_overall_phthalates_rich_t3 <- results_bkmr_overall_phthalates_rich_
 results_bkmr_overall_phthalates_sha_t3 <- results_bkmr_overall_phthalates_sha_t3 %>% rename(est_sha_t3 = est, sd_sha_t3 = sd)
 results_bkmr_overall_phthalates_fai_t3 <- results_bkmr_overall_phthalates_fai_t3 %>% rename(est_fai_t3 = est, sd_fai_t3 = sd)
 
-results_bkmr_overall_phthalates_rich_M2 <- results_bkmr_overall_phthalates_rich_M2 %>% rename(est_rich_M2 = est, sd_rich_M2 = sd)
-results_bkmr_overall_phthalates_sha_M2 <- results_bkmr_overall_phthalates_sha_M2 %>% rename(est_sha_M2 = est, sd_sha_M2 = sd)
-results_bkmr_overall_phthalates_fai_M2 <- results_bkmr_overall_phthalates_fai_M2 %>% rename(est_fai_M2 = est, sd_fai_M2 = sd)
-
 results_bkmr_overall_phthalates_rich_Y1 <- results_bkmr_overall_phthalates_rich_Y1 %>% rename(est_rich_Y1 = est, sd_rich_Y1 = sd)
 results_bkmr_overall_phthalates_sha_Y1 <- results_bkmr_overall_phthalates_sha_Y1 %>% rename(est_sha_Y1 = est, sd_sha_Y1 = sd)
 results_bkmr_overall_phthalates_fai_Y1 <- results_bkmr_overall_phthalates_fai_Y1 %>% rename(est_fai_Y1 = est, sd_fai_Y1 = sd)
@@ -742,10 +657,6 @@ results_bkmr_overall_phthalates_alpha <-
   left_join(results_bkmr_overall_phthalates_rich_t3, by =  "quantile") %>%
   left_join(results_bkmr_overall_phthalates_sha_t3, by =  "quantile") %>%
   left_join(results_bkmr_overall_phthalates_fai_t3, by = "quantile") %>%
-  
-  left_join(results_bkmr_overall_phthalates_rich_M2, by =  "quantile") %>%
-  left_join(results_bkmr_overall_phthalates_sha_M2, by =  "quantile") %>%
-  left_join(results_bkmr_overall_phthalates_fai_M2, by = "quantile") %>%
   
   left_join(results_bkmr_overall_phthalates_rich_Y1, by =  "quantile") %>%
   left_join(results_bkmr_overall_phthalates_sha_Y1, by =  "quantile") %>%
@@ -761,10 +672,6 @@ results_bkmr_overall_phthalates_alpha <-
 # results_bkmr_overall_phthalates_sha_t3_run4 <- results_bkmr_overall_phthalates_sha_t3_run4 %>% rename(est_sha_t3 = est, sd_sha_t3 = sd)
 # results_bkmr_overall_phthalates_fai_t3_run4 <- results_bkmr_overall_phthalates_fai_t3_run4 %>% rename(est_fai_t3 = est, sd_fai_t3 = sd)
 # 
-# results_bkmr_overall_phthalates_rich_M2_run4 <- results_bkmr_overall_phthalates_rich_M2_run4 %>% rename(est_rich_M2 = est, sd_rich_M2 = sd)
-# results_bkmr_overall_phthalates_sha_M2_run4 <- results_bkmr_overall_phthalates_sha_M2_run4 %>% rename(est_sha_M2 = est, sd_sha_M2 = sd)
-# results_bkmr_overall_phthalates_fai_M2_run4 <- results_bkmr_overall_phthalates_fai_M2_run4 %>% rename(est_fai_M2 = est, sd_fai_M2 = sd)
-# 
 # results_bkmr_overall_phthalates_rich_Y1_run4 <- results_bkmr_overall_phthalates_rich_Y1_run4 %>% rename(est_rich_Y1 = est, sd_rich_Y1 = sd)
 # results_bkmr_overall_phthalates_sha_Y1_run4 <- results_bkmr_overall_phthalates_sha_Y1_run4 %>% rename(est_sha_Y1 = est, sd_sha_Y1 = sd)
 # results_bkmr_overall_phthalates_fai_Y1_run4 <- results_bkmr_overall_phthalates_fai_Y1_run4 %>% rename(est_fai_Y1 = est, sd_fai_Y1 = sd)
@@ -778,10 +685,6 @@ results_bkmr_overall_phthalates_alpha <-
 #   left_join(results_bkmr_overall_phthalates_rich_t3_run4, by =  "quantile") %>%
 #   left_join(results_bkmr_overall_phthalates_sha_t3_run4, by =  "quantile") %>%
 #   left_join(results_bkmr_overall_phthalates_fai_t3_run4, by = "quantile") %>%
-#   
-#   left_join(results_bkmr_overall_phthalates_rich_M2_run4, by =  "quantile") %>%
-#   left_join(results_bkmr_overall_phthalates_sha_M2_run4, by =  "quantile") %>%
-#   left_join(results_bkmr_overall_phthalates_fai_M2_run4, by = "quantile") %>%
 #   
 #   left_join(results_bkmr_overall_phthalates_rich_Y1_run4, by =  "quantile") %>%
 #   left_join(results_bkmr_overall_phthalates_sha_Y1_run4, by =  "quantile") %>%
@@ -798,10 +701,6 @@ results_bkmr_singvar_phthalates_rich_t3 <- results_bkmr_singvar_phthalates_rich_
 results_bkmr_singvar_phthalates_sha_t3 <- results_bkmr_singvar_phthalates_sha_t3 %>% rename(est_sha = est, sd_sha = sd)
 results_bkmr_singvar_phthalates_fai_t3 <- results_bkmr_singvar_phthalates_fai_t3 %>% rename(est_fai = est, sd_fai = sd)
 
-results_bkmr_singvar_phthalates_rich_M2 <- results_bkmr_singvar_phthalates_rich_M2 %>% rename(est_rich = est, sd_rich = sd)
-results_bkmr_singvar_phthalates_sha_M2 <- results_bkmr_singvar_phthalates_sha_M2 %>% rename(est_sha = est, sd_sha = sd)
-results_bkmr_singvar_phthalates_fai_M2 <- results_bkmr_singvar_phthalates_fai_M2 %>% rename(est_fai = est, sd_fai = sd)
-
 results_bkmr_singvar_phthalates_rich_Y1 <- results_bkmr_singvar_phthalates_rich_Y1 %>% rename(est_rich = est, sd_rich = sd)
 results_bkmr_singvar_phthalates_sha_Y1 <- results_bkmr_singvar_phthalates_sha_Y1 %>% rename(est_sha = est, sd_sha = sd)
 results_bkmr_singvar_phthalates_fai_Y1 <- results_bkmr_singvar_phthalates_fai_Y1 %>% rename(est_fai = est, sd_fai = sd)
@@ -816,11 +715,6 @@ results_bkmr_singvar_phthalates_alpha_t3 <-
   left_join(results_bkmr_singvar_phthalates_sha_t3, by = c("q.fixed", "variable")) %>%
   left_join(results_bkmr_singvar_phthalates_fai_t3, by =c("q.fixed", "variable"))
 
-results_bkmr_singvar_phthalates_alpha_M2 <- 
-  results_bkmr_singvar_phthalates_rich_M2 %>%
-  left_join(results_bkmr_singvar_phthalates_sha_M2, by = c("q.fixed", "variable")) %>%
-  left_join(results_bkmr_singvar_phthalates_fai_M2, by =c("q.fixed", "variable"))
-
 results_bkmr_singvar_phthalates_alpha_Y1 <- 
   results_bkmr_singvar_phthalates_rich_Y1 %>%
   left_join(results_bkmr_singvar_phthalates_sha_Y1, by = c("q.fixed", "variable")) %>%
@@ -829,7 +723,6 @@ results_bkmr_singvar_phthalates_alpha_Y1 <-
 results_bkmr_singvar_phthalates_alpha <- 
   results_bkmr_singvar_phthalates_alpha_t2 %>%
   bind_rows(results_bkmr_singvar_phthalates_alpha_t3) %>%
-  bind_rows(results_bkmr_singvar_phthalates_alpha_M2) %>%
   bind_rows(results_bkmr_singvar_phthalates_alpha_Y1) %>%
   mutate(
     variable = str_replace_all(variable, 
@@ -859,10 +752,6 @@ results_bkmr_singvar_phthalates_alpha <-
 # results_bkmr_singvar_phthalates_sha_t3_run4 <- results_bkmr_singvar_phthalates_sha_t3_run4 %>% rename(est_sha = est, sd_sha = sd)
 # results_bkmr_singvar_phthalates_fai_t3_run4 <- results_bkmr_singvar_phthalates_fai_t3_run4 %>% rename(est_fai = est, sd_fai = sd)
 # 
-# results_bkmr_singvar_phthalates_rich_M2_run4 <- results_bkmr_singvar_phthalates_rich_M2_run4 %>% rename(est_rich = est, sd_rich = sd)
-# results_bkmr_singvar_phthalates_sha_M2_run4 <- results_bkmr_singvar_phthalates_sha_M2_run4 %>% rename(est_sha = est, sd_sha = sd)
-# results_bkmr_singvar_phthalates_fai_M2_run4 <- results_bkmr_singvar_phthalates_fai_M2_run4 %>% rename(est_fai = est, sd_fai = sd)
-# 
 # results_bkmr_singvar_phthalates_rich_Y1_run4 <- results_bkmr_singvar_phthalates_rich_Y1_run4 %>% rename(est_rich = est, sd_rich = sd)
 # results_bkmr_singvar_phthalates_sha_Y1_run4 <- results_bkmr_singvar_phthalates_sha_Y1_run4 %>% rename(est_sha = est, sd_sha = sd)
 # results_bkmr_singvar_phthalates_fai_Y1_run4 <- results_bkmr_singvar_phthalates_fai_Y1_run4 %>% rename(est_fai = est, sd_fai = sd)
@@ -876,11 +765,6 @@ results_bkmr_singvar_phthalates_alpha <-
 #   results_bkmr_singvar_phthalates_rich_t3_run4 %>%
 #   left_join(results_bkmr_singvar_phthalates_sha_t3_run4, by = c("q.fixed", "variable")) %>%
 #   left_join(results_bkmr_singvar_phthalates_fai_t3_run4, by =c("q.fixed", "variable"))
-# 
-# results_bkmr_singvar_phthalates_alpha_M2_run4 <- 
-#   results_bkmr_singvar_phthalates_rich_M2_run4 %>%
-#   left_join(results_bkmr_singvar_phthalates_sha_M2_run4, by = c("q.fixed", "variable")) %>%
-#   left_join(results_bkmr_singvar_phthalates_fai_M2_run4, by =c("q.fixed", "variable"))
 # 
 # results_bkmr_singvar_phthalates_alpha_Y1_run4 <- 
 #   results_bkmr_singvar_phthalates_rich_Y1_run4 %>%
@@ -904,17 +788,16 @@ results_bkmr_singvar_phthalates_alpha <-
 #                                  "DINCH" = "ΣDINCH")), 
 #     variable = fct_relevel(variable,
 #                            "ΣDINCH Y1", "ΣDINCH t3", "ΣDINCH t2", "ohMPHP Y1", "ohMPHP t3",
-#                            "ohMPHP t2", "MEP Y1", "MEP M2", "MEP t3", "MEP t2", "MBzP Y1",
-#                            "MBzP M2", "MBzP t3", "MBzP t2", "MiBP Y1", "MiBP M2", "MiBP t3",
-#                            "MiBP t2", "MnBP Y1", "MnBP M2", "MnBP t3", "MnBP t2", "ΣDiNP Y1",
-#                            "ΣDiNP M2", "ΣDiNP t3", "ΣDiNP t2", "ΣDEHP Y1", "ΣDEHP M2", "ΣDEHP t3",
+#                            "ohMPHP t2", "MEP Y1", "MEP t3", "MEP t2", "MBzP Y1",
+#                             "MBzP t3", "MBzP t2", "MiBP Y1",  "MiBP t3",
+#                            "MiBP t2", "MnBP Y1",  "MnBP t3", "MnBP t2", "ΣDiNP Y1",
+#                             "ΣDiNP t3", "ΣDiNP t2", "ΣDEHP Y1",  "ΣDEHP t3",
 #                            "ΣDEHP t2"))
 
 ## Assemblage et export ----
 # results_bkmr_phthalates <- list(                           
 #   pip_phthalates_alpha_t2 = pip_phthalates_alpha_t2,
 #   pip_phthalates_alpha_t3 = pip_phthalates_alpha_t3,
-#   pip_phthalates_alpha_M2 = pip_phthalates_alpha_M2,
 #   pip_phthalates_alpha_Y1 = pip_phthalates_alpha_Y1, 
 #   overall_phthalates_alpha = results_bkmr_overall_phthalates_alpha, 
 #   singvar_phthalates_alpha = results_bkmr_singvar_phthalates_alpha)
@@ -923,7 +806,6 @@ results_bkmr_singvar_phthalates_alpha <-
 # results_bkmr_phthalates_run4 <- list(                           
 #   pip_phthalates_alpha_t2 = pip_phthalates_alpha_t2_run4,
 #   pip_phthalates_alpha_t3 = pip_phthalates_alpha_t3_run4,
-#   pip_phthalates_alpha_M2 = pip_phthalates_alpha_M2_run4,
 #   pip_phthalates_alpha_Y1 = pip_phthalates_alpha_Y1_run4, 
 #   overall_phthalates_alpha = results_bkmr_overall_phthalates_alpha_run4, 
 #   singvar_phthalates_alpha = results_bkmr_singvar_phthalates_alpha_run4)
@@ -942,10 +824,6 @@ plot_risks.overall_phthalates_alpha_run3 <-
   plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha, est = est_rich_t3, sd = sd_rich_t3, title = bquote("3"^{rd}~trim.~exposure)) + 
   plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha, est = est_sha_t3, sd = sd_sha_t3) + 
   plot_risks.overall_faith(results_bkmr_overall_phthalates_alpha, est = est_fai_t3, sd = sd_fai_t3) + 
-  
-  # plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha, est = est_rich_M2, sd = sd_rich_M2, title = "2-month exposure") + 
-  # plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha, est = est_sha_M2, sd = sd_sha_M2) + 
-  # plot_risks.overall_faith(results_bkmr_overall_phthalates_alpha, est = est_fai_M2, sd = sd_fai_M2) +  
   
   plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha, est = est_rich_Y1, sd = sd_rich_Y1, title = "12-month exposure") + 
   plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha, est = est_sha_Y1, sd = sd_sha_Y1) + 
@@ -970,10 +848,6 @@ ggsave("4_output/bkmr/Run3 (ms)/plot_risks.overall_phthalates_alpha_run3ms.tiff"
 #   plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha_run4, est = est_rich_t3, sd = sd_rich_t3, title = "3rd trim. exposure") + 
 #   plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha_run4, est = est_sha_t3, sd = sd_sha_t3) + 
 #   plot_risks.overall_faith(results_bkmr_overall_phthalates_alpha_run4, est = est_fai_t3, sd = sd_fai_t3) + 
-#   
-#   plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha_run4, est = est_rich_M2, sd = sd_rich_M2, title = "2 months exposure") + 
-#   plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha_run4, est = est_sha_M2, sd = sd_sha_M2) + 
-#   plot_risks.overall_faith(results_bkmr_overall_phthalates_alpha_run4, est = est_fai_M2, sd = sd_fai_M2) +  
 #   
 #   plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha_run4, est = est_rich_Y1, sd = sd_rich_Y1, title = "12 months exposure") + 
 #   plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha_run4, est = est_sha_Y1, sd = sd_sha_Y1) + 
@@ -1004,12 +878,6 @@ ggsave("4_output/bkmr/Run3 (ms)/plot_risks.overall_phthalates_alpha_run3ms.tiff"
 #   plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t3") + 
 #   plot_layout(ncol = 3, nrow = 1)
 # 
-# plot_risks.singvar_phthalates_M2 <-
-#   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "M2", plot_title = "2-month exposure") + 
-#   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "M2") + 
-#   plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "M2") +  
-#   plot_layout(ncol = 3, nrow = 1)
-# 
 # plot_risks.singvar_phthalates_Y1 <-
 #   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "Y1", plot_title = "12-month exposure") + 
 #   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "Y1") + 
@@ -1024,11 +892,7 @@ plot_risks.singvar_phthalates <-
   
   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t3", plot_title = bquote("3"^{rd}~trim.~exposure)) + 
   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t3") + 
-  plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t3") + 
-  
-  # plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "M2", plot_title = "2-month exposure") + 
-  # plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "M2") + 
-  # plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "M2") +  
+  plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t3") +  
   
   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "Y1", plot_title = "12-month exposure") + 
   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "Y1") + 
@@ -1045,13 +909,6 @@ plot_risks.singvar_phthalates <-
 #        height = 80)
 # ggsave("4_output/phthalates/bkmr_phthalates/Run3 (ms)/plot_risks.singvar_phthalates_t3_run3ms.tiff", 
 #        plot_risks.singvar_phthalates_t3, 
-#        device = "tiff",
-#        units = "mm",
-#        dpi = 300, 
-#        width = 180,
-#        height = 80)
-# ggsave("4_output/phthalates/bkmr_phthalates/Run3 (ms)/plot_risks.singvar_phthalates_M2_run3ms.tiff", 
-#        plot_risks.singvar_phthalates_M2, 
 #        device = "tiff",
 #        units = "mm",
 #        dpi = 300, 
@@ -1086,12 +943,6 @@ ggsave("4_output/bkmr/Run3 (ms)/plot_risks.singvar_phthalates_run3ms.tiff",
 #   plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "t3") + 
 #   plot_layout(ncol = 3, nrow = 1)
 # 
-# plot_risks.singvar_phthalates_M2_run4 <-
-#   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "M2", plot_title = "2 months exposure") + 
-#   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "M2") + 
-#   plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "M2") +  
-#   plot_layout(ncol = 3, nrow = 1)
-# 
 # plot_risks.singvar_phthalates_Y1_run4 <-
 #   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "Y1", plot_title = "12 months exposure") + 
 #   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "Y1") + 
@@ -1107,10 +958,6 @@ ggsave("4_output/bkmr/Run3 (ms)/plot_risks.singvar_phthalates_run3ms.tiff",
 #   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "t3", plot_title = "3rd trim. exposure") + 
 #   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "t3") + 
 #   plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "t3") + 
-#   
-#   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "M2", plot_title = "2 months exposure") + 
-#   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "M2") + 
-#   plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "M2") +  
 #   
 #   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "Y1", plot_title = "12 months exposure") + 
 #   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha_run4, window = "Y1") + 
@@ -1132,13 +979,6 @@ ggsave("4_output/bkmr/Run3 (ms)/plot_risks.singvar_phthalates_run3ms.tiff",
 #        dpi = 300, 
 #        width = 180,
 #        height = 80)
-# ggsave("4_output/phthalates/bkmr_phthalates/Run4 (ms)/plot_risks.singvar_phthalates_M2_run4ms.tiff", 
-#        plot_risks.singvar_phthalates_M2_run4, 
-#        device = "tiff",
-#        units = "mm",
-#        dpi = 300, 
-#        width = 180,
-#        height = 80)
 # ggsave("4_output/phthalates/bkmr_phthalates/Run4 (ms)/plot_risks.singvar_phthalates_Y1_run4ms.tiff", 
 #        plot_risks.singvar_phthalates_Y1_run4, 
 #        device = "tiff",
@@ -1154,5 +994,4 @@ ggsave("4_output/bkmr/Run3 (ms)/plot_risks.singvar_phthalates_run3ms.tiff",
 #        dpi = 300, 
 #        width = 180,
 #        height = 250)
-# 
 

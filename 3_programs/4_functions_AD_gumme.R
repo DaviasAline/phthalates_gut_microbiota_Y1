@@ -73,6 +73,33 @@ comp_effectifs <- function(data, vars_col1, vars_col2, name_col1, name_col2){
   return(comp)
 }
 
+## Vérif distrib variables continues
+verif_distrib <- function(data, var) {                                               # data = df large dans lequel récuperer les variables                                                                                         # vars = vecteur de noms de variables (toutes numériques)
+  
+  boxplot <- data %>%
+    ggplot() +
+    aes(x = "", y = {{var}}) +
+    geom_boxplot(shape = "circle", fill = "#112446") +
+    coord_flip() +
+    theme_bw() +
+    theme(axis.title = element_blank()) 
+  densityplot <- data %>%
+    ggplot() +
+    aes(x = {{var}}) +
+    geom_density(fill = "lightgray") +
+    theme_bw() +
+    stat_overlay_normal_density(color = "red", linetype = "dashed") +
+    theme(axis.title = element_blank())
+  qqnorm <- data %>%
+    ggplot(aes(sample = {{var}})) +
+    stat_qq() +
+    stat_qq_line()+
+    theme_bw() + 
+    theme(axis.title = element_blank())
+  results <- boxplot + densityplot + qqnorm
+  
+  return(results)
+}
 
 ## Scatterplots
 scatterplot <- function(data, outcome, vars) {

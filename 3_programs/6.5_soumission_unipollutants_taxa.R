@@ -743,7 +743,7 @@ write_xlsx(results_signi,
 
 save.image("4_output/results_genera.RData")
 
-
+## p<0.0035 ----
 table_log %>% 
   select(-Pollutants, 
          -Time_window, 
@@ -755,5 +755,5 @@ table_log %>%
          -Outcome_rec, 
          -categorie ) %>%
   filter(`p-value`<0.0035) %>% 
-  arrange(Outcome, desc(`p-value`)) %>%
+  arrange(Phyla_corres, Class_corres, Order_corres, Family_corres, Outcome) %>%
   View()
