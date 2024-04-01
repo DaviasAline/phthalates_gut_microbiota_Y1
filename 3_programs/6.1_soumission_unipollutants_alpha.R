@@ -290,8 +290,7 @@ pollutants_vec <- bdd_alpha %>%
   select(!contains("M2")) %>%
   colnames()
 alpha_vec <- bdd_alpha %>% 
-  select(all_of(alpha_vec)) %>% 
-  select(contains("5000")) %>% 
+  select("ch_feces_SpecRich_5000_ASV_Y1", "ch_feces_Shannon_5000_ASV_Y1") %>% 
   colnames() 
 
 
@@ -301,43 +300,26 @@ alpha_vec <- bdd_alpha %>%
 #### Colonnes principales ----
 results_list_1 <- lapply(bdd_alpha[, pollutants_vec], lm_func, outcome = bdd_alpha$ch_feces_SpecRich_5000_ASV_Y1, data = bdd_alpha)
 results_list_2 <- lapply(bdd_alpha[, pollutants_vec], lm_func, outcome = bdd_alpha$ch_feces_Shannon_5000_ASV_Y1, data = bdd_alpha)
-results_list_3 <- lapply(bdd_alpha[, pollutants_vec], lm_func, outcome = bdd_alpha$ch_feces_Faith_5000_ASV_Y1, data = bdd_alpha)
 
 results_list_4 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p1_Y1, data = bdd_taxa)
 results_list_5 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p2_Y1, data = bdd_taxa)
 results_list_6 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p3_Y1, data = bdd_taxa)
 results_list_7 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p4_Y1, data = bdd_taxa)
 
-results_list_8 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g1_Y1, data = bdd_taxa)
-results_list_9 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g2_Y1, data = bdd_taxa)
-results_list_10 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g3_Y1, data = bdd_taxa)
-results_list_11 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g4_Y1, data = bdd_taxa)
-
 results_multi <- list(
   
   data_prep(results_list = results_list_1, outcome_name = "Specific richness"),
   data_prep(results_list = results_list_2, outcome_name = "Shannon diversity"),
-  data_prep(results_list = results_list_3, outcome_name = "Faith phylogenetic diversity"),
   
   data_prep(results_list = results_list_4, outcome_name = "Firmicutes"),
   data_prep(results_list = results_list_5, outcome_name = "Actinobacteria"),
   data_prep(results_list = results_list_6, outcome_name = "Bacteroidetes"),
-  data_prep(results_list = results_list_7, outcome_name = "Proteobacteria"),
-  
-  data_prep(results_list = results_list_8, outcome_name = "Bifidobacterium"),
-  data_prep(results_list = results_list_9, outcome_name = "Bacteroides"),
-  data_prep(results_list = results_list_10, outcome_name = "Blautia"),
-  data_prep(results_list = results_list_11, outcome_name = "Escherichia and Shigella")) %>%
+  data_prep(results_list = results_list_7, outcome_name = "Proteobacteria")) %>%
   
   bind_rows() %>%
   mutate(
     exposure = as.factor(exposure)) %>%
   mutate(
-    # exposure_type = case_when(
-    #   exposure == "ch_ohMPHP_cat_M2_2" ~ "categorical_2",
-    #   exposure == "ch_ohMINCH_cat_M2_2" ~ "categorical_2",
-    #   exposure == "ch_oxoMINCH_cat_M2_2" ~ "categorical_2",
-    #   TRUE ~ "continuous"), 
     exposure = str_replace_all(exposure,
                                c("mo_" = "",
                                  "ch_" = "",
@@ -349,11 +331,8 @@ results_multi <- list(
                                  "_cor" = "", 
                                  "_t2" = " t2", 
                                  "_t3" = " t3", 
-                                 #"_M2" = " M2", 
                                  "_Y1" = " Y1", 
                                  "_ms" = ""
-                                 #, 
-                                 #"_cat M2_2" = " M2"
                                  )), 
 
     p_value_shape = case_when(p.value < 0.1 ~ "p.value <0.1",
@@ -363,31 +342,17 @@ results_multi <- list(
                                 "p.value <0.1"),
     exposure_window = case_when(grepl("t2", exposure) ~ "Trim.2", 
                                 grepl("t3", exposure) ~ "Trim.3", 
-                                #grepl("M2", exposure) ~ "2 months", 
                                 grepl("Y1", exposure) ~ "12 months", 
                                 TRUE ~ "Trim.2"), 
     exposure_window = fct_relevel(exposure_window, 
                                   "Trim.2", 
                                   "Trim.3", 
-                                  #"2 months", 
-                                  "12 months"),
-    analysis = case_when(grepl("DEHP", exposure) ~ "confirmatory", 
-                         grepl("MnBP", exposure) ~ "confirmatory", 
-                         TRUE ~ "exploratory")
-    # , 
-    # term_rec = case_when(exposure_type == "continuous" ~ "Continuous", 
-    #                      exposure_type == "categorical_2" & term == ">LOD" ~ ">LOD, compared to <LOD"),
-    # term_rec = fct_relevel(term_rec,
-    #                        "Continuous", ">LOD, compared to <LOD")
-    ) %>%
+                                  "12 months")) %>%
   select("model_type", 
-         "analysis",
          "outcome", 
          "exposure",
-         #"exposure_type",
          "exposure_window",
          "term",
-         #"term_rec",
          "estimate",
          "std.error",
          "statistic",
@@ -527,22 +492,15 @@ results_M0_corrected_outcome
 
 results_multi <- results_multi %>%
   mutate(
-    FWER.p.value_alpha = ifelse(outcome %in% c("Specific richness", 
-                                         "Shannon diversity", 
-                                         "Faith phylogenetic diversity"), 
-                          p.value * 14 * 2, NA),
-    FWER.p.value_alpha = ifelse(FWER.p.value_alpha > 1, ">0.99", FWER.p.value_alpha)) 
-
-results_multi <- results_multi %>%
-  mutate(
+    FWER.p.value_alpha = ifelse(outcome %in% c("Specific richness", "Shannon diversity"), 
+                          p.value * 14 * 3, NA),
+    FWER.p.value_alpha = ifelse(FWER.p.value_alpha > 1, ">0.99", FWER.p.value_alpha),
     FWER.p.value_shape_alpha = case_when(p.value< 0.0012 & 
                                      outcome %in% c("Specific richness", 
-                                                    "Shannon diversity", 
-                                                    "Faith phylogenetic diversity")~ "p.value <0.0012",
+                                                    "Shannon diversity")~ "p.value <0.0012",
                                    p.value > 0.0012 & 
                                      outcome %in% c("Specific richness", 
-                                                    "Shannon diversity", 
-                                                    "Faith phylogenetic diversity")~ "p.value >0.0012"), 
+                                                    "Shannon diversity")~ "p.value >0.0012"), 
     FWER.p.value_shape_alpha = fct_relevel(FWER.p.value_shape_alpha,
                                 "p.value >0.0012", 
                                 "p.value <0.0012"))
@@ -623,15 +581,10 @@ results_multi_alpha_conf <- tbl_merge(
     model(data = bdd_alpha,
           outcome = ch_feces_Shannon_5000_ASV_Y1,
           exposure_vec = conf_vec, 
-          digit_beta_IC = 2),
-    model(data = bdd_alpha, 
-          outcome = ch_feces_Faith_5000_ASV_Y1,
-          exposure_vec = conf_vec, 
-          digit_beta_IC = 1)), 
+          digit_beta_IC = 2)), 
   tab_spanner = c("", 
                   "**Specific richness**", 
-                  "**Shannon diversity**", 
-                  "**Faith's phylogenetic diversity**"))
+                  "**Shannon diversity**"))
 
 # analyses exploratoires avec correction pour les polluants sans hypothèses à priori
 results_multi_alpha_explo <- tbl_merge(
@@ -649,16 +602,10 @@ results_multi_alpha_explo <- tbl_merge(
       data = bdd_alpha,
       outcome = ch_feces_Shannon_5000_ASV_Y1,
       exposure_vec = explo_vec, 
-      digit_beta_IC = 2),
-    model(
-      data = bdd_alpha, 
-      outcome = ch_feces_Faith_5000_ASV_Y1,
-      exposure_vec = explo_vec, 
-      digit_beta_IC = 1)), 
+      digit_beta_IC = 2)), 
   tab_spanner = c("", 
                   "**Specific richness**", 
-                  "**Shannon diversity**", 
-                  "**Faith's phylogenetic diversity**"))
+                  "**Shannon diversity**"))
 
 
 ### Tableaux article - taxonomie ----
@@ -1006,47 +953,35 @@ forestplot_shannon <- function(results_list, outcome_name) {
 
 leg <- results_multi %>%
   filter(outcome == "Shannon diversity") %>%
-  #filter(analysis == "confirmatory") %>%
   filter(model_type == "adjusted") %>%
   forestplot_shannon(outcome_name = "Shannon diversity") +
   theme(axis.text.y = element_blank(), 
         axis.title.y = element_blank())
 leg <- get_legend(leg) %>% as_ggplot()
 
-forestplot_alpha_confirmatory_1 <-
+forestplot_alpha_1 <-
   results_multi %>%
   filter(outcome == "Specific richness") %>%
-  #filter(analysis == "confirmatory") %>%
   filter(model_type == "adjusted") %>%
   forestplot(outcome_name = "Specific richness") +
   theme(legend.position = "none")
 
-forestplot_alpha_confirmatory_2 <-
+forestplot_alpha_2 <-
   results_multi %>%
   filter(outcome == "Shannon diversity") %>%
-  #filter(analysis == "confirmatory") %>%
   filter(model_type == "adjusted") %>%
   forestplot_shannon(outcome_name = "Shannon diversity") +
   theme(axis.text.y = element_blank(), axis.title.y = element_blank())+
   theme(legend.position = "none")
 
-forestplot_alpha_confirmatory_3 <- 
-  results_multi %>%
-  filter(outcome == "Faith phylogenetic diversity") %>%
-  #filter(analysis == "confirmatory") %>%
-  filter(model_type == "adjusted") %>%
-  forestplot(outcome_name = "Faith's phylogenetic diversity") +
-  theme(axis.text.y = element_blank(), axis.title.y = element_blank())+
-  theme(legend.position = "none")
 
-
-forestplot_alpha_confirmatory <- 
-  (forestplot_alpha_confirmatory_1 + forestplot_alpha_confirmatory_2 + forestplot_alpha_confirmatory_3) / leg + 
+forestplot_alpha <- 
+  (forestplot_alpha_1 + forestplot_alpha_2) / leg + 
   plot_layout(heights = c(14, 1))
-forestplot_alpha_confirmatory
+forestplot_alpha
 
-ggsave("4_output/Review Coauteurs/forestplot_alpha_phthalates.tiff", 
-       plot = forestplot_alpha_confirmatory, 
+ggsave("4_output/Figure 1 (forestplot_alpha_phthalates).tiff", 
+       plot = forestplot_alpha, 
        device = "tiff",
        units = "mm",
        width = 180, 

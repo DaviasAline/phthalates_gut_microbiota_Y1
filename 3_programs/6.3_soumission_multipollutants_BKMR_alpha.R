@@ -560,6 +560,7 @@ list_overall <- list(results_bkmr_overall_phthalates_rich_t2 = results_bkmr_over
 save(list_overall, 
       file = "4_output/bkmr/Run3 (ms)/resuts_bkmr_overall_phthalates_alpha_run3ms.RData")
 load("4_output/bkmr/Run3 (ms)/resuts_bkmr_overall_phthalates_alpha_run3ms.RData")
+list2env(list_overall, envir = .GlobalEnv)
 
 # results_bkmr_overall_phthalates_rich_t2_run4 <- risks_overall(results_bkmr_phthalates_rich_t2_run4, outcome_specrich_t2, mixture_alpha_t2, covariates_alpha_t2)
 # results_bkmr_overall_phthalates_sha_t2_run4 <- risks_overall(results_bkmr_phthalates_sha_t2_run4, outcome_shannon_t2, mixture_alpha_t2, covariates_alpha_t2)
@@ -606,7 +607,10 @@ names(list_singvar) <- c("results_bkmr_singvar_phthalates_rich_t2",
                          "results_bkmr_singvar_phthalates_fai_t2", 
                          "results_bkmr_singvar_phthalates_rich_t3", 
                          "results_bkmr_singvar_phthalates_sha_t3", 
-                         "results_bkmr_singvar_phthalates_fai_t3", 
+                         "results_bkmr_singvar_phthalates_fai_t3",  
+                         "results_bkmr_singvar_phthalates_rich_M2", 
+                         "results_bkmr_singvar_phthalates_sha_M2", 
+                         "results_bkmr_singvar_phthalates_fai_M2",
                          "results_bkmr_singvar_phthalates_rich_Y1", 
                          "results_bkmr_singvar_phthalates_sha_Y1", 
                          "results_bkmr_singvar_phthalates_fai_Y1")
@@ -736,10 +740,10 @@ results_bkmr_singvar_phthalates_alpha <-
                                  "DINCH" = "ΣDINCH")), 
     variable = fct_relevel(variable,
                            "ΣDINCH Y1", "ΣDINCH t3", "ΣDINCH t2", "ohMPHP Y1", "ohMPHP t3",
-                           "ohMPHP t2", "MEP Y1", "MEP M2", "MEP t3", "MEP t2", "MBzP Y1",
-                           "MBzP M2", "MBzP t3", "MBzP t2", "MiBP Y1", "MiBP M2", "MiBP t3",
-                           "MiBP t2", "MnBP Y1", "MnBP M2", "MnBP t3", "MnBP t2", "ΣDiNP Y1",
-                           "ΣDiNP M2", "ΣDiNP t3", "ΣDiNP t2", "ΣDEHP Y1", "ΣDEHP M2", "ΣDEHP t3",
+                           "ohMPHP t2", "MEP Y1", "MEP t3", "MEP t2", "MBzP Y1",
+                           "MBzP t3", "MBzP t2", "MiBP Y1", "MiBP t3",
+                           "MiBP t2", "MnBP Y1", "MnBP t3", "MnBP t2", "ΣDiNP Y1",
+                           "ΣDiNP t3", "ΣDiNP t2", "ΣDEHP Y1", "ΣDEHP t3",
                            "ΣDEHP t2"))
 
 
@@ -819,17 +823,14 @@ dev.off()
 plot_risks.overall_phthalates_alpha_run3 <- 
   plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha, est = est_rich_t2, sd = sd_rich_t2, title = bquote("2"^{nd}~trim.~exposure)) +
   plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha, est = est_sha_t2, sd = sd_sha_t2) + 
-  plot_risks.overall_faith(results_bkmr_overall_phthalates_alpha, est = est_fai_t2, sd = sd_fai_t2) + 
   
   plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha, est = est_rich_t3, sd = sd_rich_t3, title = bquote("3"^{rd}~trim.~exposure)) + 
   plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha, est = est_sha_t3, sd = sd_sha_t3) + 
-  plot_risks.overall_faith(results_bkmr_overall_phthalates_alpha, est = est_fai_t3, sd = sd_fai_t3) + 
   
   plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha, est = est_rich_Y1, sd = sd_rich_Y1, title = "12-month exposure") + 
   plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha, est = est_sha_Y1, sd = sd_sha_Y1) + 
-  plot_risks.overall_faith(results_bkmr_overall_phthalates_alpha, est = est_fai_Y1, sd = sd_fai_Y1) +  
   
-  plot_layout(ncol = 3, nrow = 3) 
+  plot_layout(ncol = 2, nrow = 3) 
 
 
 ggsave("4_output/bkmr/Run3 (ms)/plot_risks.overall_phthalates_alpha_run3ms.tiff", 
@@ -888,16 +889,13 @@ ggsave("4_output/bkmr/Run3 (ms)/plot_risks.overall_phthalates_alpha_run3ms.tiff"
 plot_risks.singvar_phthalates <- 
   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t2", plot_title = bquote("2"^{nd}~trim.~exposure)) + 
   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t2") + 
-  plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t2") + 
   
   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t3", plot_title = bquote("3"^{rd}~trim.~exposure)) + 
   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t3") + 
-  plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t3") +  
   
   plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "Y1", plot_title = "12-month exposure") + 
   plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "Y1") + 
-  plot_risks.singvar_faith(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "Y1") +  
-  plot_layout(ncol = 3, nrow = 3) 
+  plot_layout(ncol = 2, nrow = 3) 
 
 
 # ggsave("4_output/phthalates/bkmr_phthalates/Run3 (ms)/plot_risks.singvar_phthalates_t2_run3ms.tiff", 

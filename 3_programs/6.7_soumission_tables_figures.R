@@ -334,14 +334,13 @@ load("2_final_data/bdd_taxa.RData")
 source("3_programs/4_functions_AD_gumme.R", encoding = 'UTF-8')      # fonctions
 source("3_programs/4_vectors_AD_gumme.R", echo=FALSE)
 library(corrplot)
-bdd_alpha <- bdd_alpha %>% select(ident, all_of(alpha_vec))
+bdd_alpha <- bdd_alpha %>% select(ident, "ch_feces_SpecRich_5000_ASV_Y1", "ch_feces_Shannon_5000_ASV_Y1")
 bdd_taxa <- bdd_taxa %>% select(ident, ch_feces_rel_p1_Y1,  ch_feces_rel_p2_Y1, ch_feces_rel_p3_Y1, ch_feces_rel_p4_Y1)
 bdd <- left_join(bdd_alpha, bdd_taxa, by = "ident")
 bdd <- bdd %>%
   select(-ident) %>%
   rename("Specific richness" = "ch_feces_SpecRich_5000_ASV_Y1",
          "Shannon diversity" = "ch_feces_Shannon_5000_ASV_Y1", 
-         "Faith phylogenetic diversity" = "ch_feces_Faith_5000_ASV_Y1",
          "Firmicutes" = "ch_feces_rel_p1_Y1", 
          "Actinobacteria" = "ch_feces_rel_p2_Y1", 
          "Bacteroidetes" = "ch_feces_rel_p3_Y1", 
