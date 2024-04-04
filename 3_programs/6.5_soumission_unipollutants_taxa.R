@@ -590,37 +590,37 @@ table_log$Outcome_rec <- table_log$Outcome %>%
 
 # Figures ----
 ### Mahatan plot Fig.4 ----
-mahatan_plot <- table_log  %>%
-  mutate(
-    Outcome_rec = 
-      fct_relevel(Outcome_rec, 
-                  "Alistipes", "Anaerostipes", "Bacteroides", "Anaerotruncus",
-                  "Bifidobacterium", "Blautia", "Escherichia and Shigella", "Butyricicoccus", 
-                  "Cellulosibacter", "Clostridium IV", "Clostridium sensu stricto",
-                  "Clostridium XlVa", "Clostridium XVIII", "Collinsella", "Coprococcus",
-                  "Dialister", "Dorea", "Eggerthella", "Eisenbergiella", "Enterobacter",
-                  "Enterococcus", "Erysipelotrichaceae incertae sedis", 
-                  "Faecalibacterium", "Flavonifractor", "Fusicatenibacter", "Gemmiger",
-                  "Granulicatella", "Haemophilus", "Hungatella", "Intestinibacter",
-                  "Klebsiella", "Lachnospiracea incertae sedis", "Lactococcus",
-                  "Oscillibacter", "Parabacteroides", "Peptoniphilus", "Romboutsia",
-                  "Roseburia", "Ruminococcus", "Ruminococcus 2", "Saccharibacteria genera incertae sedis",
-                  "Terrisporobacter","Streptococcus", "Subdoligranulum", "Veillonella", "Akkermansia")) %>%
-  ggplot(aes(x = -log10(`p-value`), y = Outcome_rec)) +
-  geom_point(aes(shape = sens_beta), size = 2) +
-  geom_vline(xintercept = -log10(0.05), linetype = "dashed", color = "red") +
-  geom_vline(xintercept = -log10(0.05/(14*33)), linetype = "dashed", color = "blue") +
-  theme_lucid() +
-  labs(x = "-log10(P-value)", 
-       y = "Genera", 
-       shape = "") +
-  geom_text(aes(label = ifelse(`p-value` < 0.008, as.character(Pollutants_Time_window_rec), "")), hjust = -0.05, vjust = -0.3, angle = 35, size = 3.5) +
-  scale_shape_manual(values = c("Beta<0" = 15, "Beta≥0" = 17)) +# 15: carré plein, 17: triangle plein
-  theme(
-    legend.position = "right",
-    legend.box = "vertical", 
-    legend.justification = "right", 
-    axis.text.y = element_text(face = "italic"))
+# mahatan_plot <- table_log  %>%
+#   mutate(
+#     Outcome_rec = 
+#       fct_relevel(Outcome_rec, 
+#                   "Alistipes", "Anaerostipes", "Bacteroides", "Anaerotruncus",
+#                   "Bifidobacterium", "Blautia", "Escherichia and Shigella", "Butyricicoccus", 
+#                   "Cellulosibacter", "Clostridium IV", "Clostridium sensu stricto",
+#                   "Clostridium XlVa", "Clostridium XVIII", "Collinsella", "Coprococcus",
+#                   "Dialister", "Dorea", "Eggerthella", "Eisenbergiella", "Enterobacter",
+#                   "Enterococcus", "Erysipelotrichaceae incertae sedis", 
+#                   "Faecalibacterium", "Flavonifractor", "Fusicatenibacter", "Gemmiger",
+#                   "Granulicatella", "Haemophilus", "Hungatella", "Intestinibacter",
+#                   "Klebsiella", "Lachnospiracea incertae sedis", "Lactococcus",
+#                   "Oscillibacter", "Parabacteroides", "Peptoniphilus", "Romboutsia",
+#                   "Roseburia", "Ruminococcus", "Ruminococcus 2", "Saccharibacteria genera incertae sedis",
+#                   "Terrisporobacter","Streptococcus", "Subdoligranulum", "Veillonella", "Akkermansia")) %>%
+#   ggplot(aes(x = -log10(`p-value`), y = Outcome_rec)) +
+#   geom_point(aes(shape = sens_beta), size = 2) +
+#   geom_vline(xintercept = -log10(0.05), linetype = "dashed", color = "red") +
+#   geom_vline(xintercept = -log10(0.05/(14*33)), linetype = "dashed", color = "blue") +
+#   theme_lucid() +
+#   labs(x = "-log10(P-value)", 
+#        y = "Genera", 
+#        shape = "") +
+#   geom_text(aes(label = ifelse(`p-value` < 0.008, as.character(Pollutants_Time_window_rec), "")), hjust = -0.05, vjust = -0.3, angle = 35, size = 3.5) +
+#   scale_shape_manual(values = c("Beta<0" = 15, "Beta≥0" = 17)) +# 15: carré plein, 17: triangle plein
+#   theme(
+#     legend.position = "right",
+#     legend.box = "vertical", 
+#     legend.justification = "right", 
+#     axis.text.y = element_text(face = "italic"))
 
 table_log$categorie <- factor(table_log$Outcome_rec, levels = c(levels(table_log$Outcome_rec), "  ", "   ", "    "))
 
@@ -671,14 +671,15 @@ mahatan_plot <- table_log  %>%
   labs(x = "-log10(P-value)", 
        y = "Genera", 
        shape = "") +
-  geom_text(aes(label = ifelse(`p-value` < 0.008, as.character(Pollutants_Time_window_rec), "")), hjust = -0.07, vjust = -0.2, angle = 22.5, size = 3.5) +
+  geom_text(aes(label = ifelse(`p-value` < 0.008, as.character(Pollutants_Time_window_rec), "")), hjust = -0.07, vjust = -0.2, angle = 45, size = 3.5) +
   scale_shape_manual(values = c("Beta<0" = 15, "Beta≥0" = 17)) +# 15: carré plein, 17: triangle plein
   theme(
-    legend.position = "right",
+    legend.position = "bottom",
     legend.box = "vertical", 
-    legend.justification = "right", 
-    axis.text.y = element_text(face = "italic"), 
-    plot.margin = margin(t = 30))
+    legend.justification = "center", 
+    axis.text.y = element_text(face = "italic", size = 12)) +
+  xlim(0, 5.8) 
+
 
 mahatan_plot
 ggsave("4_output/manhattan_plot.tiff", 
@@ -686,8 +687,8 @@ ggsave("4_output/manhattan_plot.tiff",
        device = "tiff",
        units = "cm",
        dpi = 300,
-       height = 20, 
-       width = 44)
+       height = 27, 
+       width = 27)
 
 ### Forestplot final ----
 forest_plot <- table_log %>% 
