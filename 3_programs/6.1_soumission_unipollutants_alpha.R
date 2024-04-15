@@ -1,17 +1,27 @@
 # A. Davias
 # 08/02/2023
 
-## Chargement des données et des fonctions existantes ----
+# Chargement des données et des fonctions existantes ----
 load("2_final_data/metadata.RData")
 load("2_final_data/bdd_alpha.RData")
 load("2_final_data/bdd_taxa.RData")
 source("3_programs/4_functions_AD_gumme.R", encoding = 'UTF-8')      # fonctions
+rm(comp_effectifs, heatmap_cor_pairwise, model_covar, model_multi, model_summary, model_univ_multi, 
+   table_cor, table_cor_sg, test_sensi_sg)
 source("3_programs/4_vectors_AD_gumme.R", echo=TRUE)
+rm(pollutant_vec_t2, pollutant_vec_t3, pollutant_vec_M2, pollutant_vec_Y1, 
+   covar_vec, covar_vec_cat, covar_vec_cat_i,
+   phthalates_vec_cat, phthalates_vec_ln, phthalates_vec_ter, 
+   taxa_vec, 
+   list = ls()[grep("sg", ls())])
+rm(list = ls()[grep("phenols", ls())])
+rm(list = ls()[grep("pfas", ls())])
+rm(list = ls()[grep("num", ls())])
 library(psych)
 library(writexl)
 
 
-## Création de fonctions ----
+# Création de fonctions ----
 
 # Fonction pour obtenir les résultats bruts
 lm_func <- function(outcome, exposure, data){   
@@ -271,19 +281,7 @@ M0_corrected <- function(data, alpha=0.05) {
 
 
 
-## Création des vecteurs ----
-conf_vec <- bdd_alpha %>% 
-  select(all_of(phthalates_vec))%>% 
-  select(contains(c("DEHP", "MnBP"))) %>% 
-  colnames()
-explo_vec <- bdd_alpha %>% 
-  select(all_of(phthalates_vec)) %>% 
-  select(!contains(c("MEOHP", "MECPP", "MEHHP", "MEHP", "MMCHP",    # on ne met pas en analyse principale les métabolite quand on peut étudier la masse molaire
-                     "DEHP",                                        # analyse confirmatoire
-                     "MnBP",                                        # analyse confirmatoire
-                     "ohMiNP", "oxoMiNP", "cxMiNP",                 # on ne met pas en analyse principale les métabolite quand on peut étudier la masse molaire
-                     "ohMINCH", "oxoMINCH"))) %>%                   # on ne met pas en analyse principale les métabolite quand on peut étudier la masse molaire
-  colnames()
+# Création des vecteurs ----
 pollutants_vec <- bdd_alpha %>% 
   select(all_of(phthalates_vec)) %>% 
   select(!contains(c("MEOHP", "MECPP", "MEHHP", "MEHP", "MMCHP", "ohMiNP", "oxoMiNP", "cxMiNP", "ohMINCH", "oxoMINCH"))) %>% 
@@ -292,29 +290,29 @@ pollutants_vec <- bdd_alpha %>%
 alpha_vec <- bdd_alpha %>% 
   select("ch_feces_SpecRich_5000_ASV_Y1", "ch_feces_Shannon_5000_ASV_Y1") %>% 
   colnames() 
+rm(phthalates_vec)
 
 
 
-## Results - Unipolluants analysis ----
-### Tableaux bruts ----
-#### Colonnes principales ----
+# Results - Unipolluants analysis ----
+## Tableaux bruts ----
 results_list_1 <- lapply(bdd_alpha[, pollutants_vec], lm_func, outcome = bdd_alpha$ch_feces_SpecRich_5000_ASV_Y1, data = bdd_alpha)
 results_list_2 <- lapply(bdd_alpha[, pollutants_vec], lm_func, outcome = bdd_alpha$ch_feces_Shannon_5000_ASV_Y1, data = bdd_alpha)
 
-results_list_4 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p1_Y1, data = bdd_taxa)
-results_list_5 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p2_Y1, data = bdd_taxa)
-results_list_6 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p3_Y1, data = bdd_taxa)
-results_list_7 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p4_Y1, data = bdd_taxa)
+results_list_3 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p1_Y1, data = bdd_taxa)
+results_list_4 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p2_Y1, data = bdd_taxa)
+results_list_5 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p3_Y1, data = bdd_taxa)
+results_list_6 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_p4_Y1, data = bdd_taxa)
 
 results_multi <- list(
   
   data_prep(results_list = results_list_1, outcome_name = "Specific richness"),
   data_prep(results_list = results_list_2, outcome_name = "Shannon diversity"),
   
-  data_prep(results_list = results_list_4, outcome_name = "Firmicutes"),
-  data_prep(results_list = results_list_5, outcome_name = "Actinobacteria"),
-  data_prep(results_list = results_list_6, outcome_name = "Bacteroidetes"),
-  data_prep(results_list = results_list_7, outcome_name = "Proteobacteria")) %>%
+  data_prep(results_list = results_list_3, outcome_name = "Firmicutes"),
+  data_prep(results_list = results_list_4, outcome_name = "Actinobacteria"),
+  data_prep(results_list = results_list_5, outcome_name = "Bacteroidetes"),
+  data_prep(results_list = results_list_6, outcome_name = "Proteobacteria")) %>%
   
   bind_rows() %>%
   mutate(
@@ -361,108 +359,10 @@ results_multi <- list(
          "p.value", 
          "p_value_shape")
 
-#### Tableau pour Marion ---- 
-bdd_marion <- results_multi %>%
-  select(outcome, 
-         Pollutant = exposure, 
-         Variable_type = exposure_type, 
-         #Variable_categories = term_rec, 
-         estimate, 
-         p.value) %>%
-  separate(Pollutant, c("Pollutant", "Timing")) %>%
-  mutate(
-    Timing = fct_recode(Timing, "T2" = "t2", "T3" = "t3"), 
-    Variable_type = fct_recode(Variable_type, "cat_2" = "categorical_2"),
-    ch_feces_specrich_5000_Y1_b = ifelse(outcome == "Specific richness", estimate, NA), 
-    ch_feces_specrich_5000_Y1_p = ifelse(outcome == "Specific richness", p.value, NA), 
-    ch_feces_shannon_5000_Y1_b = ifelse(outcome == "Shannon diversity", estimate, NA), 
-    ch_feces_shannon_5000_Y1_p = ifelse(outcome == "Shannon diversity", p.value, NA), 
-    ch_feces_faith_5000_Y1_b = ifelse(outcome == "Faith phylogenetic diversity", estimate, NA), 
-    ch_feces_faith_5000_Y1_p = ifelse(outcome == "Faith phylogenetic diversity", p.value, NA), 
-    
-    ch_feces_firmicutes_5000_Y1_b = ifelse(outcome == "Firmicutes", estimate, NA), 
-    ch_feces_firmicutes_5000_Y1_p = ifelse(outcome == "Firmicutes", p.value, NA), 
-    ch_feces_actinobacteria_5000_Y1_b = ifelse(outcome == "Actinobacteria", estimate, NA), 
-    ch_feces_actinobacteria_5000_Y1_p = ifelse(outcome == "Actinobacteria", p.value, NA),
-    ch_feces_bacteroidetes_5000_Y1_b = ifelse(outcome == "Bacteroidetes", estimate, NA), 
-    ch_feces_bacteroidetes_5000_Y1_p = ifelse(outcome == "Bacteroidetes", p.value, NA),
-    ch_feces_proteobacteria_5000_Y1_b = ifelse(outcome == "Proteobacteria", estimate, NA), 
-    ch_feces_proteobacteria_5000_Y1_p = ifelse(outcome == "Proteobacteria", p.value, NA),
-    
-    ch_feces_blautia_5000_Y1_b = ifelse(outcome == "Blautia", estimate, NA), 
-    ch_feces_blautia_5000_Y1_p = ifelse(outcome == "Blautia", p.value, NA),
-    ch_feces_bifidobacterium_5000_Y1_b = ifelse(outcome == "Bifidobacterium", estimate, NA), 
-    ch_feces_bifidobacterium_5000_Y1_p = ifelse(outcome == "Bifidobacterium", p.value, NA),
-    ch_feces_bacteroides_5000_Y1_b = ifelse(outcome == "Bacteroides", estimate, NA), 
-    ch_feces_bacteroides_5000_Y1_p = ifelse(outcome == "Bacteroides", p.value, NA),
-    ch_feces_escherichia_shigella_5000_Y1_b = ifelse(outcome == "Escherichia and Shigella", estimate, NA), 
-    ch_feces_escherichia_shigella_5000_Y1_p = ifelse(outcome == "Escherichia and Shigella", p.value, NA)) %>%
-  select(-outcome, -estimate, -p.value)
-
-write_xlsx(
-  bdd_marion, 
-  "C:/Users/Aline/OneDrive - etu.univ-grenoble-alpes.fr/Documents/7. Présentations écrites/9. Figure_overview_SEPAGES/SEPAGES_overview_phthalates.xlsx")
+rm(results_list_1, results_list_2, results_list_3, results_list_4, results_list_5, results_list_6)
 
 
-#### Correction pour comparaison multiple (tous les tests pris en compte) ----
-# test_expo <- bdd_alpha %>% 
-#   filter(!is.na(ch_feces_Shannon_5000_ASV_Y1)) %>%
-#   select(all_of(pollutants_vec)) %>% na.omit()
-# 
-# test_outcome <- bdd_alpha %>% 
-#   filter(!is.na(ch_feces_Shannon_5000_ASV_Y1)) %>%
-#   select(ident, 
-#          ch_feces_Shannon_5000_ASV_Y1, 
-#          ch_feces_Faith_5000_ASV_Y1, 
-#          ch_feces_SpecRich_5000_ASV_Y1) %>% 
-#   na.omit() %>%
-#   select(-ident)
-# 
-# # test_outcome_2 <- bdd_taxa %>% 
-# #   filter(!is.na(ch_feces_rel_p1_Y1)) %>%
-# #   select(ident, 
-# #          ch_feces_rel_p1_Y1:ch_feces_rel_p4_Y1,
-# #          ch_feces_rel_g1_Y1:ch_feces_rel_g4_Y1) %>% na.omit()
-# # 
-# # test_outcome <- left_join(test_outcome, test_outcome_2, by = "ident") %>% select(-ident)
-# 
-# var_lab(test_outcome$ch_feces_Shannon_5000_ASV_Y1) <- NULL 
-# var_lab(test_outcome$ch_feces_Faith_5000_ASV_Y1) <- NULL 
-# var_lab(test_outcome$ch_feces_SpecRich_5000_ASV_Y1) <- NULL 
-# 
-# var_lab(test_outcome$ch_feces_rel_p1_Y1) <- NULL 
-# var_lab(test_outcome$ch_feces_rel_p2_Y1) <- NULL 
-# var_lab(test_outcome$ch_feces_rel_p3_Y1) <- NULL 
-# var_lab(test_outcome$ch_feces_rel_p4_Y1) <- NULL 
-# var_lab(test_outcome$ch_feces_rel_g1_Y1) <- NULL 
-# var_lab(test_outcome$ch_feces_rel_g2_Y1) <- NULL 
-# var_lab(test_outcome$ch_feces_rel_g3_Y1) <- NULL 
-# var_lab(test_outcome$ch_feces_rel_g4_Y1) <- NULL 
-# 
-# cor_mixed_table_expo <- cor_mixed(data = test_expo, method = "pearson")
-# results_alpha_corrected_expo <- alpha_corrected(data = test_expo, alpha = 0.05)
-# results_M0_corrected_expo <- M0_corrected(data = test_expo, alpha = 0.05)
-# results_M0_corrected_expo
-# ## on passe de 24 expositions à 14 expositions après prise en compte de leur corrélation
-# 
-# cor_mixed_table_outcome <- cor_mixed(data = test_outcome, method = "pearson")
-# results_alpha_corrected_outcome <- alpha_corrected(data = test_outcome, alpha = 0.05)
-# results_M0_corrected_outcome <- M0_corrected(data = test_outcome, alpha = 0.05)
-# results_M0_corrected_outcome
-# ## on passe de 3 outcomes à 2 outcomes après prise en compte de leur corrélation
-# 
-# # 
-# # results_multi <- results_multi %>%
-# #   mutate(
-# #     FWER.p.value = p.value * 17 * 6,
-# #     FWER.p.value = ifelse(FWER.p.value > 1, 1, FWER.p.value)) 
-# # 
-# # results_multi <- results_multi %>%
-# #   mutate(
-# #     FWER.p.value_2 = round(FWER.p.value, 2))
-
-
-#### Correction pour comparaison multiple (seulement les tests alpha diversité pris en compte) ----
+## Correction pour comparaison multiple (seulement les tests alpha diversité pris en compte) ----
 test_expo <- bdd_alpha %>% 
   filter(!is.na(ch_feces_Shannon_5000_ASV_Y1)) %>%
   select(all_of(pollutants_vec)) %>% na.omit()
@@ -475,7 +375,6 @@ test_outcome <- bdd_alpha %>%
   na.omit() 
 
 var_lab(test_outcome$ch_feces_Shannon_5000_ASV_Y1) <- NULL 
-var_lab(test_outcome$ch_feces_Faith_5000_ASV_Y1) <- NULL 
 var_lab(test_outcome$ch_feces_SpecRich_5000_ASV_Y1) <- NULL 
 
 cor_mixed_table_expo <- cor_mixed(data = test_expo, method = "pearson")
@@ -488,7 +387,7 @@ cor_mixed_table_outcome <- cor_mixed(data = test_outcome, method = "pearson")
 results_alpha_corrected_outcome <- alpha_corrected(data = test_outcome, alpha = 0.05)
 results_M0_corrected_outcome <- M0_corrected(data = test_outcome, alpha = 0.05)
 results_M0_corrected_outcome
-## on passe de 3 outcomes à 2 outcomes après prise en compte de leur corrélation
+## on passe de 2 outcomes à 2 outcomes après prise en compte de leur corrélation
 
 results_multi <- results_multi %>%
   mutate(
@@ -504,122 +403,43 @@ results_multi <- results_multi %>%
     FWER.p.value_shape_alpha = fct_relevel(FWER.p.value_shape_alpha,
                                 "p.value >0.0012", 
                                 "p.value <0.0012"))
+rm(test_expo, test_outcome, 
+   cor_mixed_table_expo, cor_mixed_table_outcome, 
+   results_alpha_corrected_expo, results_alpha_corrected_outcome, 
+   results_M0_corrected_expo, results_M0_corrected_outcome)
 
-
-#### Correction pour comparaison multiple (taxonomie pour les polluants associés à l'alpha div) ----
-test_expo <- bdd_alpha %>% 
-  filter(!is.na(ch_feces_Shannon_5000_ASV_Y1)) %>%
-  select(ch_DEHP_ms_i_cor_Y1_ln, ch_MEP_i_cor_Y1_ln, ch_ohMPHP_i_cor_Y1_ln) %>% na.omit()
-
-test_outcome <- bdd_taxa %>% 
-  filter(!is.na(ch_feces_rel_p1_Y1)) %>%
-  select(ch_feces_rel_p1_Y1, ch_feces_rel_p2_Y1, ch_feces_rel_p3_Y1, ch_feces_rel_p4_Y1,
-         ch_feces_rel_g1_Y1, ch_feces_rel_g2_Y1, ch_feces_rel_g3_Y1, ch_feces_rel_g4_Y1) %>% 
-  na.omit() 
-
-var_lab(test_outcome$ch_feces_rel_p1_Y1) <- NULL 
-var_lab(test_outcome$ch_feces_rel_p2_Y1) <- NULL 
-var_lab(test_outcome$ch_feces_rel_p3_Y1) <- NULL 
-var_lab(test_outcome$ch_feces_rel_p4_Y1) <- NULL 
-var_lab(test_outcome$ch_feces_rel_g1_Y1) <- NULL 
-var_lab(test_outcome$ch_feces_rel_g2_Y1) <- NULL 
-var_lab(test_outcome$ch_feces_rel_g3_Y1) <- NULL 
-var_lab(test_outcome$ch_feces_rel_g4_Y1) <- NULL 
-
-cor_mixed_table_expo <- cor_mixed(data = test_expo, method = "pearson")
-results_alpha_corrected_expo <- alpha_corrected(data = test_expo, alpha = 0.05)
-results_M0_corrected_expo <- M0_corrected(data = test_expo, alpha = 0.05)
-results_M0_corrected_expo
-## on passe de 3 expositions à 2 expositions après prise en compte de leur corrélation
-
-cor_mixed_table_outcome <- cor_mixed(data = test_outcome, method = "pearson")
-results_alpha_corrected_outcome <- alpha_corrected(data = test_outcome, alpha = 0.05)
-results_M0_corrected_outcome <- M0_corrected(data = test_outcome, alpha = 0.05)
-results_M0_corrected_outcome
-## on passe de 8 outcomes à 4 outcomes après prise en compte de leur corrélation
-
-results_multi <- results_multi %>%
-  mutate(
-    FWER.p.value_taxa = ifelse(exposure %in% c("DEHP Y1", 
-                                            "MEP Y1", 
-                                            "ohMPHP Y1") & 
-                            !outcome %in% c("Specific richness", 
-                                           "Shannon diversity", 
-                                           "Faith phylogenetic diversity"), 
-                          p.value * 4 * 2,NA), 
-    FWER.p.value_taxa = ifelse(FWER.p.value_taxa > 1, ">0.99", FWER.p.value_taxa)) 
-
-results_multi <- results_multi %>%
-  mutate(
-    FWER.p.value_shape_taxa = 
-      case_when(p.value< 0.006 & exposure %in% c("DEHP Y1", "MEP Y1", "ohMPHP Y1") & 
-                  !outcome %in% c("Specific richness", "Shannon diversity", "Faith phylogenetic diversity") ~ 
-                  "p<0.006 (pollutants associated with α-div and corrected for multiple testing)",
-                p.value> 0.006 & exposure %in% c("DEHP Y1", "MEP Y1", "ohMPHP Y1") & 
-                  !outcome %in% c("Specific richness", "Shannon diversity", "Faith phylogenetic diversity") ~ 
-                  "p>0.006 (pollutants associated with α-div and corrected for multiple testing)",
-                
-                p.value< 0.05 & !exposure %in% c("DEHP Y1", "MEP Y1", "ohMPHP Y1") & 
-                  !outcome %in% c("Specific richness", "Shannon diversity", "Faith phylogenetic diversity") ~ 
-                  "p<0.05 (pollutants not associated with α-div and not corrected for multiple testing)",
-                p.value> 0.05 & !exposure %in% c("DEHP Y1", "MEP Y1", "ohMPHP Y1") & 
-                  !outcome %in% c("Specific richness", "Shannon diversity", "Faith phylogenetic diversity") ~ 
-                  "p>0.05 (pollutants not associated with α-div and not corrected for multiple testing)"))
-
-
-### Tableaux article - alpha diversité ----
-# analyses confirmatoires sans correction pour les polluants avec hypothèses à priori
-results_multi_alpha_conf <- tbl_merge(                         
+## Tableaux article -----
+### Table 1 : alpha diversité en régressions linéaires ----
+table_1 <- tbl_merge(                         
   tbls = list(
     effectif_column(data = bdd_alpha, 
                     outcome = ch_feces_SpecRich_5000_ASV_Y1, 
-                    exposure_vec = conf_vec),
+                    exposure_vec = pollutants_vec),
     model(data = bdd_alpha, 
           outcome = ch_feces_SpecRich_5000_ASV_Y1,
-          exposure_vec = conf_vec, 
+          exposure_vec = pollutants_vec, 
           digit_beta_IC = 1),
     model(data = bdd_alpha,
           outcome = ch_feces_Shannon_5000_ASV_Y1,
-          exposure_vec = conf_vec, 
+          exposure_vec = pollutants_vec, 
           digit_beta_IC = 2)), 
   tab_spanner = c("", 
                   "**Specific richness**", 
                   "**Shannon diversity**"))
 
-# analyses exploratoires avec correction pour les polluants sans hypothèses à priori
-results_multi_alpha_explo <- tbl_merge(
-  tbls = list(
-    effectif_column(
-      data = bdd_alpha, 
-      outcome = ch_feces_SpecRich_5000_ASV_Y1, 
-      exposure_vec = explo_vec),
-    model(
-      data = bdd_alpha, 
-      outcome = ch_feces_SpecRich_5000_ASV_Y1,
-      exposure_vec = explo_vec, 
-      digit_beta_IC = 1),
-    model(
-      data = bdd_alpha,
-      outcome = ch_feces_Shannon_5000_ASV_Y1,
-      exposure_vec = explo_vec, 
-      digit_beta_IC = 2)), 
-  tab_spanner = c("", 
-                  "**Specific richness**", 
-                  "**Shannon diversity**"))
 
-
-### Tableaux article - taxonomie ----
+### Table 2 : taxonomie en régressions linéaires ----
 # Analyses "explicatives" non corrigées pour comparaison multiple pour la taxonomie 
 # pour les associations significatives pour l'alpha diversité
 # pour les autres polluants non significatifs --> on met tout en analyse sup. 
-signi_vec <- c("ch_DEHP_ms_i_cor_Y1_ln", "ch_MnBP_i_cor_Y1_ln", "ch_MEP_i_cor_Y1_ln", "ch_ohMPHP_i_cor_Y1_ln")
+signi_vec <- c("ch_DEHP_ms_i_cor_Y1_ln","ch_MEP_i_cor_Y1_ln", "ch_ohMPHP_i_cor_Y1_ln")
 not_signi_vec <- bdd_alpha %>% 
-  select(all_of(conf_vec), all_of(explo_vec)) %>% 
-  select(-c("ch_DEHP_ms_i_cor_Y1_ln", "ch_MnBP_i_cor_Y1_ln", "ch_MEP_i_cor_Y1_ln", "ch_ohMPHP_i_cor_Y1_ln")) %>%
+  select(all_of(pollutants_vec)) %>% 
+  select(-c("ch_DEHP_ms_i_cor_Y1_ln", "ch_MEP_i_cor_Y1_ln", "ch_ohMPHP_i_cor_Y1_ln")) %>%
   colnames()
 
 
-results_multi_phyla_signi <- tbl_merge(
+table_2 <- tbl_merge(
   tbls = list(
     effectif_column(
       data = bdd_taxa, 
@@ -651,40 +471,8 @@ results_multi_phyla_signi <- tbl_merge(
                   "**Phylum Bacteroidetes**",
                   "**Phylum Proteobacteria**"))
 
-results_multi_genera_signi <- tbl_merge(
-  tbls = list(
-    effectif_column(
-      data = bdd_taxa, 
-      outcome = ch_feces_rel_g1_Y1, 
-      exposure_vec = signi_vec),
-    model(
-      data = bdd_taxa, 
-      outcome = ch_feces_rel_g1_Y1,
-      exposure_vec = signi_vec, 
-      digit_beta_IC = 1),
-    model(
-      data = bdd_taxa,
-      outcome = ch_feces_rel_g2_Y1,
-      exposure_vec = signi_vec, 
-      digit_beta_IC = 1),
-    model(
-      data = bdd_taxa, 
-      outcome = ch_feces_rel_g3_Y1,
-      exposure_vec = signi_vec, 
-      digit_beta_IC = 1), 
-    model(
-      data = bdd_taxa, 
-      outcome = ch_feces_rel_g4_Y1,
-      exposure_vec = signi_vec, 
-      digit_beta_IC = 1)), 
-  tab_spanner = c("", 
-                  "**Genus Bifidobacterium**",
-                  "**Genus Bacteroides**",
-                  "**Genus Blautia**",
-                  "**Genera Eschericha / Shigella**"))
-
-
-results_multi_phyla_not_signi <- tbl_merge(
+### Table A.9 : taxonomie en régressions linéaires ----
+table_A9 <- tbl_merge(
   tbls = list(
     effectif_column(
       data = bdd_taxa, 
@@ -716,117 +504,8 @@ results_multi_phyla_not_signi <- tbl_merge(
                   "**Phylum Bacteroidetes**",
                   "**Phylum Proteobacteria**"))
 
-results_multi_genera_not_signi <- tbl_merge(
-  tbls = list(
-    effectif_column(
-      data = bdd_taxa, 
-      outcome = ch_feces_rel_g1_Y1, 
-      exposure_vec = not_signi_vec),
-    model(
-      data = bdd_taxa, 
-      outcome = ch_feces_rel_g1_Y1,
-      exposure_vec = not_signi_vec, 
-      digit_beta_IC = 1),
-    model(
-      data = bdd_taxa,
-      outcome = ch_feces_rel_g2_Y1,
-      exposure_vec = not_signi_vec, 
-      digit_beta_IC = 1),
-    model(
-      data = bdd_taxa, 
-      outcome = ch_feces_rel_g3_Y1,
-      exposure_vec = not_signi_vec, 
-      digit_beta_IC = 1), 
-    model(
-      data = bdd_taxa, 
-      outcome = ch_feces_rel_g4_Y1,
-      exposure_vec = not_signi_vec, 
-      digit_beta_IC = 1)), 
-  tab_spanner = c("", 
-                  "**Genus Bifidobacterium**",
-                  "**Genus Bacteroides**",
-                  "**Genus Blautia**",
-                  "**Genera Eschericha / Shigella**"))
-
-### Tableaux article - investigation des genres firmicutes ----
-# Analyses "explicatives" non corrigées pour comparaison multiple pour la taxonomie 
-# pour les associations significatives pour l'alpha diversité
-# pour les autres polluants non significatifs --> on met tout en analyse sup. 
-taxa <- read.csv("~/5. R projects/pollutants_gut_microbiota_Y1/0_source_data/taxa_table_ASVbased_Y1_AD_20220504_8.csv")
-
-taxa %>% filter(ch_feces_phylum_ASVbased_Y1 == "Firmicutes") %>% select(ch_feces_phylum_ASVbased_Y1, ch_feces_genus_ASVbased_Y1) %>% View()
-bdd_taxa %>% select(ident, contains("ch_feces_rel_g")) %>% View()
-descrip_num(data = bdd_taxa, vars = c("ch_feces_rel_g1_Y1", "ch_feces_rel_g2_Y1", "ch_feces_rel_g3_Y1", "ch_feces_rel_g4_Y1"))
-densityplot(data = bdd_taxa, vars = c("ch_feces_rel_g1_Y1", "ch_feces_rel_g2_Y1", "ch_feces_rel_g3_Y1", "ch_feces_rel_g4_Y1"))
-densityplot(data = bdd_taxa, vars = c("ch_feces_rel_p1_Y1", "ch_feces_rel_p2_Y1", "ch_feces_rel_p3_Y1", "ch_feces_rel_p4_Y1"))
-
-descrip_num(data = bdd_taxa, 
-            vars = c("ch_feces_rel_g6_Y1", "ch_feces_rel_g7_Y1", "ch_feces_rel_g8_Y1", "ch_feces_rel_g9_Y1", 
-                     "ch_feces_rel_g10_Y1", "ch_feces_rel_g12_Y1", "ch_feces_rel_g13_Y1", "ch_feces_rel_g14_Y1", "ch_feces_rel_g15_Y1"))
-
-bdd_taxa <- bdd_taxa %>%
-  mutate(
-    ch_feces_rel_g6_Y1_ln = ch_feces_rel_g6_Y1^2,
-    ch_feces_rel_g7_Y1_ln = ch_feces_rel_g7_Y1^2, 
-    ch_feces_rel_g8_Y1_ln = ch_feces_rel_g8_Y1^2, 
-    ch_feces_rel_g9_Y1_ln = ch_feces_rel_g9_Y1^2,
-    ch_feces_rel_g10_Y1_ln = ch_feces_rel_g10_Y1^2, 
-    ch_feces_rel_g12_Y1_ln = ch_feces_rel_g12_Y1^2, 
-    ch_feces_rel_g13_Y1_ln = ch_feces_rel_g13_Y1^2, 
-    ch_feces_rel_g14_Y1_ln = ch_feces_rel_g14_Y1^2, 
-    ch_feces_rel_g15_Y1_ln = ch_feces_rel_g15_Y1^2)
-
-densityplot(data = bdd_taxa, 
-            vars = c("ch_feces_rel_g6_Y1", "ch_feces_rel_g7_Y1", "ch_feces_rel_g8_Y1", "ch_feces_rel_g9_Y1", 
-                     "ch_feces_rel_g10_Y1", "ch_feces_rel_g12_Y1", "ch_feces_rel_g13_Y1", "ch_feces_rel_g14_Y1", "ch_feces_rel_g15_Y1", 
-                     "ch_feces_rel_g6_Y1_ln", "ch_feces_rel_g7_Y1_ln", "ch_feces_rel_g8_Y1_ln", "ch_feces_rel_g9_Y1_ln", 
-                     "ch_feces_rel_g10_Y1_ln", "ch_feces_rel_g12_Y1_ln", "ch_feces_rel_g13_Y1_ln", "ch_feces_rel_g14_Y1_ln", "ch_feces_rel_g15_Y1_ln"))
-
-firmi_vec <- c("ch_feces_rel_g6_Y1_ln", "ch_feces_rel_g7_Y1_ln", "ch_feces_rel_g8_Y1_ln", "ch_feces_rel_g9_Y1_ln", 
-               "ch_feces_rel_g10_Y1_ln", "ch_feces_rel_g12_Y1_ln", "ch_feces_rel_g13_Y1_ln", "ch_feces_rel_g14_Y1_ln", "ch_feces_rel_g15_Y1_ln")
-
-
-results_list_12 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g6_Y1_ln, data = bdd_taxa)
-results_list_13 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g7_Y1_ln, data = bdd_taxa)
-results_list_14 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g8_Y1_ln, data = bdd_taxa)
-results_list_15 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g9_Y1_ln, data = bdd_taxa)
-results_list_16 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g10_Y1_ln, data = bdd_taxa)
-results_list_17 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g12_Y1_ln, data = bdd_taxa)
-results_list_18 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g13_Y1_ln, data = bdd_taxa)
-results_list_19 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g14_Y1_ln, data = bdd_taxa)
-results_list_20 <- lapply(bdd_taxa[, pollutants_vec], lm_func, outcome = bdd_taxa$ch_feces_rel_g15_Y1_ln, data = bdd_taxa)
-
-lm(ch_feces_rel_g6_Y1_ln ~
-     mo_DiNP_ms_i_cor_t2_ln +
-     ch_feces_RUN_Y1 +
-     ch_feces_age_w_Y1_i +
-     po_delmod +
-     ch_food_intro_Y1_3cat_i +
-     ch_antibio_Y1_2cat_i +
-     mo_par_2cat + 
-     mo_pets_i +
-     ch_sex +
-     mo_tob_gr_anyt_yn_n2_i +
-     Mo_ETS_anyT_yn1_opt_i +
-     ch_ETS_12m_opt36m +
-     mo_interpreg_3cat +
-     mo_dipl_3cat_i +
-     po_w_kg_3cat +
-     po_he_3cat_i +
-     ch_w_Y1_3cat_i +
-     ch_he_Y1_3cat_i +
-     po_gd +
-     mo_age +
-     mo_bmi_bepr_3cat_i +
-     bf_duration_till48w_4cat_i,
-   data = bdd_taxa)
-
-
-
-
-### Tableaux article - mixture effects ----
-### Figures article - forestplots ----
-#### Alpha diversity ----
+## Figures article ----
+### Figure 1 : Alpha diversity ----
 results_multi <- results_multi %>%
   mutate(
     exposure =  fct_relevel(
@@ -850,40 +529,6 @@ results_multi <- results_multi %>%
       "ΣDEHP Y1" = "DEHP Y1",
       "ΣDEHP t3" = "DEHP t3",
       "ΣDEHP t2" = "DEHP t2"))
-
-# forestplot <- function(results_list, outcome_name) {
-#   results <- results_list %>%
-#     ggplot(aes(x = exposure, 
-#                y = estimate, 
-#                min = conf.low, 
-#                ymax = conf.high, 
-#                #color = interaction(exposure_window, term_2), 
-#                #color = term_rec, 
-#                shape = FWER.p.value_shape)) +
-#     geom_hline(yintercept = 0, linetype="dashed") +
-#     geom_pointrange(position = position_dodge(width = 0.7), size = 0.4) +
-#     labs(x = "Exposures", y = outcome_name) +
-#     theme_bw() +
-#     coord_flip()  +
-#     scale_shape_manual(values = c(19, 21),
-#                        name = "p-value corrected") +
-#     guides(color = "none")+
-#     theme(axis.title = element_text(size = 7),
-#           axis.text = element_text(size = 7),
-#           legend.text = element_text(size = 7),
-#           legend.title = element_text(size = 7), 
-#           legend.position = "bottom",
-#           legend.box = "vertical", 
-#           legend.justification = "center", 
-#           legend.spacing.y = unit(0, "cm"), 
-#           legend.spacing.x = unit(0, "cm"), 
-#           legend.box.margin = margin(0,0,0,0, "cm"), 
-#           legend.margin = margin(0,0,0,0, "cm"))
-#   
-#   return(results)
-# }
-
-
 
 forestplot <- function(results_list, outcome_name) {
   results <- results_list %>%
@@ -975,249 +620,18 @@ forestplot_alpha_2 <-
   theme(legend.position = "none")
 
 
-forestplot_alpha <- 
+fig_1 <- 
   (forestplot_alpha_1 + forestplot_alpha_2) / leg + 
   plot_layout(heights = c(14, 1))
-forestplot_alpha
+
+rm(forestplot_alpha_1, forestplot_alpha_2, leg)
 
 ggsave("4_output/Figure 1 (forestplot_alpha_phthalates).tiff", 
-       plot = forestplot_alpha, 
+       plot = fig_1, 
        device = "tiff",
        units = "mm",
        width = 180, 
        height = 160,
-       dpi = 300,
-       limitsize = FALSE)
-
-#### Taxonomy -----
-forestplot <- function(results_list, outcome_name) {
-  results <- results_list %>%
-    ggplot(aes(x = exposure, 
-               y = estimate, 
-               min = conf.low, 
-               ymax = conf.high, 
-               #color = interaction(exposure_window, term_2), 
-               color = FWER.p.value_shape_taxa
-               )) +
-    geom_hline(yintercept = 0, linetype="dashed") +
-    geom_pointrange(position = position_dodge(width = 0.4), size = 0.4) +
-    labs(x = "Exposures", y = outcome_name) +
-    theme_bw() +
-    coord_flip()  +
-    scale_color_manual(values = c(  "orange","red", "grey", "black"),
-                       name = "") +
-    guides(color = guide_legend(title = ""))+
-    theme(axis.title = element_text(size = 7),
-          axis.text = element_text(size = 6),
-          legend.text = element_text(size = 6),
-          legend.title = element_text(size = 6), 
-          legend.position = "bottom",
-          legend.box = "vertical", 
-          legend.justification = "center", 
-          legend.spacing.y = unit(0, "cm"), 
-          legend.spacing.x = unit(0, "cm"), 
-          legend.box.margin = margin(0,0,0,0, "cm"), 
-          legend.margin = margin(0,0,0,0, "cm"))
-  
-  return(results)
-}
-
-##### Confirmatory ----
-
-leg_taxonomy <-  
-  results_multi %>%
-  filter(outcome == "Firmicutes") %>%
-  filter(exposure %in% c("MEP Y1", "DEHP Y1", "ohMPHP Y1")) %>%
-  filter(model_type == "adjusted") %>%
-  mutate(
-    FWER.p.value_shape_taxa = fct_relevel(FWER.p.value_shape_taxa, 
-                                          "p>0.006 (pollutants associated with α-div and corrected for multiple testing)",
-                                          "p<0.006 (pollutants associated with α-div and corrected for multiple testing)",
-                                          "p<0.05 (pollutants not associated with α-div and not corrected for multiple testing)",
-                                          "p>0.05 (pollutants not associated with α-div and not corrected for multiple testing)"
-    )
-  ) %>% 
-  forestplot(outcome_name = "Firmicutes") +
-  guides(color = guide_legend(direction = "vertical"))
-leg_taxonomy <- get_legend(leg_taxonomy) %>% as_ggplot()
-
-forestplot_alpha_taxonomy_1 <-
-  results_multi %>%
-  filter(outcome == "Firmicutes") %>%
-  filter(exposure %in% c("MEP Y1", "DEHP Y1", "ohMPHP Y1")) %>%
-  filter(model_type == "adjusted") %>%
-  mutate(
-    FWER.p.value_shape_taxa = fct_relevel(FWER.p.value_shape_taxa, 
-                                          "p>0.006 (pollutants associated with α-div and corrected for multiple testing)",
-                                          "p<0.006 (pollutants associated with α-div and corrected for multiple testing)",
-                                          "p<0.05 (pollutants not associated with α-div and not corrected for multiple testing)",
-                                          "p>0.05 (pollutants not associated with α-div and not corrected for multiple testing)"
-    )
-  ) %>% 
-  forestplot(outcome_name = "Firmicutes")+
-  theme(legend.position = "none")
-
-
-
-forestplot_alpha_taxonomy_2 <-
-  results_multi %>%
-  filter(outcome == "Actinobacteria") %>%
-  filter(exposure %in% c("MEP Y1", "DEHP Y1", "ohMPHP Y1")) %>%
-  filter(model_type == "adjusted") %>%
-  mutate(
-    FWER.p.value_shape_taxa = fct_relevel(FWER.p.value_shape_taxa, 
-        "p>0.006 (pollutants associated with α-div and corrected for multiple testing)",
-        "p<0.006 (pollutants associated with α-div and corrected for multiple testing)",
-        "p<0.05 (pollutants not associated with α-div and not corrected for multiple testing)",
-        "p>0.05 (pollutants not associated with α-div and not corrected for multiple testing)"
-      )
-  ) %>% 
-  forestplot(outcome_name = "Actinobacteria") +
-  theme(axis.text.y = element_blank(), axis.title.y = element_blank())+
-  theme(legend.position = "none")
-
-forestplot_alpha_taxonomy_3 <- 
-  results_multi %>%
-  filter(outcome == "Bacteroidetes") %>%
-  filter(exposure %in% c("MEP Y1", "DEHP Y1", "ohMPHP Y1")) %>%
-  filter(model_type == "adjusted") %>%
-  mutate(
-    FWER.p.value_shape_taxa = fct_relevel(FWER.p.value_shape_taxa, 
-                                          "p>0.006 (pollutants associated with α-div and corrected for multiple testing)",
-                                          "p<0.006 (pollutants associated with α-div and corrected for multiple testing)",
-                                          "p<0.05 (pollutants not associated with α-div and not corrected for multiple testing)",
-                                          "p>0.05 (pollutants not associated with α-div and not corrected for multiple testing)"
-    )
-  ) %>% 
-  forestplot(outcome_name = "Bacteroidetes") +
-  theme(axis.text.y = element_blank(), axis.title.y = element_blank())+
-  theme(legend.position = "none")
-
-forestplot_alpha_taxonomy_4 <- 
-  results_multi %>%
-  filter(outcome == "Proteobacteria") %>%
-  filter(exposure %in% c("MEP Y1", "DEHP Y1", "ohMPHP Y1")) %>%
-  filter(model_type == "adjusted") %>%
-  mutate(
-    FWER.p.value_shape_taxa = fct_relevel(FWER.p.value_shape_taxa, 
-                                          "p>0.006 (pollutants associated with α-div and corrected for multiple testing)",
-                                          "p<0.006 (pollutants associated with α-div and corrected for multiple testing)",
-                                          "p<0.05 (pollutants not associated with α-div and not corrected for multiple testing)",
-                                          "p>0.05 (pollutants not associated with α-div and not corrected for multiple testing)"
-    )
-  ) %>% 
-  forestplot(outcome_name = "Proteobacteria") +
-  theme(axis.text.y = element_blank(), axis.title.y = element_blank())+
-  theme(legend.position = "none")
-
-
-forestplot_taxonomy <- 
-  (forestplot_alpha_taxonomy_1 + forestplot_alpha_taxonomy_2 + forestplot_alpha_taxonomy_3 + forestplot_alpha_taxonomy_4) + 
-  plot_layout(ncol = 4)
-
-forestplot_taxonomy <- forestplot_taxonomy + leg_taxonomy + plot_layout(nrow = 2, ncol = 4, heights = c(4, 2))
-
-ggsave("4_output/Review Coauteurs/forestplot_taxonomy.tiff", 
-       plot = forestplot_taxonomy, 
-       device = "tiff",
-       units = "mm",
-       width = 180, 
-       height = 60,
-       dpi = 300,
-       limitsize = FALSE)
-
-##### Explo ----
-
-
-### Figures article - Heatmap correlation entre pollutants ----
-bdd_phthalates <- bdd_alpha %>% 
-  select(all_of(phthalates_vec)) %>%
-  select(!contains(c("MEOHP", "MECPP", "MEHHP", "MEHP", "MMCHP",     
-                     "ohMiNP", "oxoMiNP", "cxMiNP",                 
-                     "ohMINCH", "oxoMINCH"))) %>%  
-  select(!contains("cat"))
-
-colnames(bdd_phthalates) <- colnames(bdd_phthalates) %>%
-  str_replace_all(c("mo_" = "",
-                    "ch_" = "",
-                    "_total_i_cor_" = " ",
-                    "_i_cor_" = " ", 
-                    "_ln" = "",
-                    "_conj" = "",
-                    "ln" = "",
-                    "_cor" = "", 
-                    "_t2" = " t2", 
-                    "_t3" = " t3", 
-                    "_M2" = " M2", 
-                    "_Y1" = " Y1", 
-                    "_ms" = "", 
-                    "_cat M2_2" = " M2", 
-                    "DINCH Y1" = "ΣDINCH Y1",
-                    "DINCH t3" = "ΣDINCH t3",
-                    "DINCH t2" = "ΣDINCH t2",
-                    "DiNP Y1" = "ΣDiNP Y1",
-                    "DiNP M2" = "ΣDiNP M2",
-                    "DiNP t3" = "ΣDiNP t3",
-                    "DiNP t2" = "ΣDiNP t2",
-                    "DEHP Y1" = "ΣDEHP Y1",
-                    "DEHP M2" = "ΣDEHP M2",
-                    "DEHP t3" = "ΣDEHP t3",
-                    "DEHP t2" = "ΣDEHP t2")) 
-
-heatmap_phthalates <- heatmap_cor(bdd_phthalates, decimal = 1)
-ggsave(filename = "4_output/phthalates/heatmap_cor_phthalates.tiff",
-       plot = heatmap_phthalates, 
-       units = "mm",
-       width = 250, 
-       height = 250,
-       dpi = 300,
-       limitsize = FALSE)
-
-### Figures article - Heatmap correlation pollutants and covariates  ----
-vars_1 <- metadata %>% 
-  select(all_of(phthalates_vec_num)) %>%
-  select(!contains(c("MEOHP", "MECPP", "MEHHP", "MEHP", "MMCHP",     
-                     "ohMiNP", "oxoMiNP", "cxMiNP",                 
-                     "ohMINCH", "oxoMINCH"))) %>%  
-  colnames()
-cormat <- metadata %>% 
-  select(all_of(vars_1),
-         all_of(covar_vec_num))
-colnames(cormat) <- colnames(cormat) %>%
-  str_replace_all(
-    c("ch_feces_age_w_Y1" = "Child age (weeks)",
-      "ch_antibio_Y1" = "Antibiotics use 0-12 months",
-      "mo_par" = "Maternal parity",
-      "po_w_kg" = "Birth weight (kg)",
-      "po_he"= "Birth length (cm)", 
-      "ch_w_Y1"="Weight at one year (Kg)", 
-      "ch_he_Y1"="Length at one year (cm)", 
-      "po_gd"= "Gestational age (weeks)", 
-      "mo_age"="Maternal age before pregnancy", 
-      "mo_bmi_bepr"="Maternal BMI before pregnancy", 
-      "bf_duration_till48w"="Breastfeeding duration (weeks)"))
-
-
-heatmap <- heatmap_cor_pairwise(data = cormat, 
-                     vars_1 = vars_1, 
-                     vars_2 = c("Child age (weeks)",
-                                "Antibiotics use 0-12 months",
-                                "Maternal parity",
-                                "Birth weight (kg)",
-                                "Birth length (cm)", 
-                                "Weight at one year (Kg)", 
-                                "Length at one year (cm)", 
-                                "Gestational age (weeks)", 
-                                "Maternal age before pregnancy", 
-                                "Maternal BMI before pregnancy", 
-                                "Breastfeeding duration (weeks)"), 
-                     decimal = 1)
-
-ggsave(filename = "4_output/heatmap_cor_phthalates_covar.tiff",
-       plot = heatmap, 
-       units = "mm",
-       width = 100, 
-       height = 150,
        dpi = 300,
        limitsize = FALSE)
 
@@ -1226,7 +640,7 @@ ggsave(filename = "4_output/heatmap_cor_phthalates_covar.tiff",
 ### Rarefaction ----
 phthalates_signi_vec <- 
   bdd_alpha %>% 
-  select(all_of(phthalates_vec)) %>%
+  select(all_of(pollutants_vec)) %>%
   select(ch_DEHP_ms_i_cor_Y1_ln, 
          ch_MnBP_i_cor_Y1_ln, 
          mo_DiNP_ms_i_cor_t2_ln,
@@ -1234,7 +648,6 @@ phthalates_signi_vec <-
          ch_MiBP_i_cor_Y1_ln, 
          ch_MBzP_i_cor_Y1_ln, 
          ch_MEP_i_cor_Y1_ln, 
-         ch_ohMPHP_cat_M2_2, 
          ch_ohMPHP_i_cor_Y1_ln) %>%
   colnames()
 
@@ -1255,12 +668,6 @@ sensi_sha_rare_phthalates <-
                 model(exposure_vec = phthalates_signi_vec, outcome = ch_feces_Shannon_10000_ASV_Y1, data = bdd_col_2_3, digit_beta_IC = 2)),       
     tab_spanner = c("**Threshold 5,000 (n=350)**", "**Threshold 5,000 (n=339)**", "**Threshold 10,000 (n=339)**"))
 
-sensi_fai_rare_phthalates <-    
-  tbl_merge(
-    tbls = list(model(exposure_vec = phthalates_signi_vec, outcome = ch_feces_Faith_5000_ASV_Y1, data = bdd_col_1, digit_beta_IC = 1), 
-                model(exposure_vec = phthalates_signi_vec, outcome = ch_feces_Faith_5000_ASV_Y1, data = bdd_col_2_3, digit_beta_IC = 1), 
-                model(exposure_vec = phthalates_signi_vec, outcome = ch_feces_Faith_10000_ASV_Y1, data = bdd_col_2_3, digit_beta_IC = 1)), 
-    tab_spanner = c("**Threshold 5,000 (n=350)**", "**Threshold 5,000 (n=339)**", "**Threshold 10,000 (n=339)**"))
 
 
 ### Gravité spécifique ----
@@ -1298,17 +705,12 @@ sensi_sg_alpha_phthalates <-
       model(data = bdd_alpha, outcome = ch_feces_SpecRich_5000_ASV_Y1, exposure_vec = phthalates_signi_sg_vec, digit_beta_IC = 1), 
       
       model(data = bdd_alpha, outcome = ch_feces_Shannon_5000_ASV_Y1, exposure_vec = phthalates_signi_vec, digit_beta_IC = 2), 
-      model(data = bdd_alpha, outcome = ch_feces_Shannon_5000_ASV_Y1, exposure_vec = phthalates_signi_sg_vec, digit_beta_IC = 2), 
-      
-      model(data = bdd_alpha, outcome = ch_feces_Faith_5000_ASV_Y1, exposure_vec = phthalates_signi_vec, digit_beta_IC = 1), 
-      model(data = bdd_alpha, outcome = ch_feces_Faith_5000_ASV_Y1, exposure_vec = phthalates_signi_sg_vec, digit_beta_IC = 1)), 
+      model(data = bdd_alpha, outcome = ch_feces_Shannon_5000_ASV_Y1, exposure_vec = phthalates_signi_sg_vec, digit_beta_IC = 2)), 
     tab_spanner = c(
       "**Specific richness, principal analysis, fully adjusted**", 
       "**Specific richness, sensitivity analysis, fully adjusted + sg**", 
       "**Shannon diversity, principal analysis, fully adjusted**", 
-      "**Shannon diversity, sensitivity analysis, fully adjusted + sg**", 
-      "**Faith diversity, principal analysis, fully adjusted**", 
-      "**Faith diversity, sensitivity analysis, fully adjusted + sg**"))
+      "**Shannon diversity, sensitivity analysis, fully adjusted + sg**"))
 
 sensi_sg_phyla_phthalates <- tbl_merge(
   tbls = list(
@@ -1332,31 +734,6 @@ sensi_sg_phyla_phthalates <- tbl_merge(
     "**Phylum Bacteroidetes, sensitivity analysis, fully adjusted + sg**", 
     "**Phylum Proteobacteria, principal analysis, fully adjusted**",
     "**Phylum Proteobacteria, sensitivity analysis, fully adjusted + sg**"))
-
-
-sensi_sg_genera_phthalates <- tbl_merge(
-  tbls = list(
-    model(data = bdd_taxa, outcome = ch_feces_rel_g1_Y1, exposure_vec = phthalates_signi_vec, digit_beta_IC = 1), 
-    model(data = bdd_taxa, outcome = ch_feces_rel_g1_Y1, exposure_vec = phthalates_signi_sg_vec, digit_beta_IC = 1), 
-    
-    model(data = bdd_taxa, outcome = ch_feces_rel_g2_Y1, exposure_vec = phthalates_signi_vec, digit_beta_IC = 1), 
-    model(data = bdd_taxa, outcome = ch_feces_rel_g2_Y1, exposure_vec = phthalates_signi_sg_vec, digit_beta_IC = 1), 
-    
-    model(data = bdd_taxa, outcome = ch_feces_rel_g3_Y1, exposure_vec = phthalates_signi_vec, digit_beta_IC = 1), 
-    model(data = bdd_taxa, outcome = ch_feces_rel_g3_Y1, exposure_vec = phthalates_signi_sg_vec, digit_beta_IC = 1), 
-    
-    model(data = bdd_taxa, outcome = ch_feces_rel_g4_Y1, exposure_vec = phthalates_signi_vec, digit_beta_IC = 1), 
-    model(data = bdd_taxa, outcome = ch_feces_rel_g4_Y1, exposure_vec = phthalates_signi_sg_vec, digit_beta_IC = 1)), 
-  tab_spanner = c(
-    "**Genus Bifidobacterium, principal analysis, fully adjusted**",
-    "**Genus Bifidobacterium, sensitivity analysis, fully adjusted + sg**", 
-    "**Genus Bacteroides, principal analysis, fully adjusted**",
-    "**Genus Bacteroides, sensitivity analysis, fully adjusted + sg**", 
-    "**Genus Blautia, principal analysis, fully adjusted**",
-    "**Genus Blautia, sensitivity analysis, fully adjusted + sg**", 
-    "**Genera Eschericha / Shigella, principal analysis, fully adjusted**",
-    "**Genera Eschericha / Shigella, sensitivity analysis, fully adjusted + sg**"
-  ))
 
 
 ## Additional file 2 modif pour somme molaire ----

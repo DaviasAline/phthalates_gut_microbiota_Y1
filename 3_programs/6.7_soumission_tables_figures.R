@@ -3,52 +3,55 @@
 # 23.02.2024
 
 
+# Article ----
+## Table 1 ----
+# Adjusted associations between concentrations of chemicals and the α-diversity 
+# indices of the child gut microbiota at 12-month-old (single chemical models, 
+# sample size between 344 and 349).
+load("4_output/results_genera.RData")
+table_1
 
-# Fig.1 ----
+
+## Table 2 ----
+# Adjusted associations between concentrations of chemicals with identified 
+# effects on α-diversity indices and the 4 most abundant phyla of the child gut 
+# microbiota at 12-month-old (n = 351).
+load("4_output/results_genera.RData")
+table_2
+
+## Fig.1 ----
 # Adjusted associations between concentrations of chemicals and the α-diversity 
 # indices of the child gut microbiota at 12-month-old (single-chemical models, 
-#n between 344 and 349).
+# sample size between 344 and 349).
+load("4_output/results_genera.RData")
+fig_1
 
-# Fig.2 ----
-# Expected changes in α-diversity indices associated with concurrently 
+## Fig.2 ----
+# Expected changes in phyla relative abundances associated with concurrently 
 # increasing quantiles of all chemicals (continuous variables), relative to when 
-# all concentrations are fixed at their 25th percentile (mixture models, n 
-# between 344 and 349).
+# all concentrations are fixed at their 10th percentile (mixture models, sample 
+# size between 350 and 355).
 
-# Fig.3 ----
+## Fig.3 ----
 # Expected changes in phyla relative abundances associated with concurrently 
 # increasing quantiles of all chemicals (continuous variables), relative to when 
 # all concentrations are fixed at their 25th percentile (mixture models, n 
 # between 344 and 349).
 
-# Fig.4 ----
+## Fig.4 ----
 # Adjusted associations between concentrations of chemicals and the 46 most 
-# abundant genera in the child gut microbiota at one year (adjusted uni-pollutant 
-# models, n between 350 and 355).
+# abundant genera in the child gut microbiota at 12 months (adjusted single-
+#chemical models, sample size between 350 and 355).
 
 
-# Table 1 ----
-# Adjusted associations between concentrations of chemicals and the α-diversity 
-# indices of the child gut microbiota at 12-month-old (single chemical models, n 
-# between 344 and 349).
-
-# Table 2 ----
-# Adjusted associations between concentrations of chemicals and Bray-Curtis 
-# β-diversity in one-year children gut microbiota (n between 344 and 349).
-
-# Table 3 ----
-# Adjusted associations between concentrations of chemicals with identified 
-# effects on α-diversity indices and the four most abundant phyla of the child gut 
-# microbiota at 12-month-old (n = 351).
-
-# Table A.1 ----
+## Table A.1 ----
 # Assessment of exposure to phthalate and DINCH metabolites in SEPAGES cohort.
 
-# Table A.2 ----
+## Table A.2 ----
 # Distribution and comparison of exposures to phthalates and DINCH metabolites 
 # in SEPAGES cohort (484  mother-child pairs).
 
-# Table A.3 ----
+## Table A.3 ----
 # Distribution of α-diversity indices and major taxa in 12-month child gut 
 # microbiota from SEPAGES  cohort.
 load("2_final_data/metadata.RData")
@@ -117,45 +120,63 @@ write.xlsx(Table_A_3, file = "4_output/Table_A_3.xlsx")
 rm(list = ls())
 
 
-# Table A.4 ----
+## Table A.4 ----
 # Adjusted associations between concentrations of chemicals during the second 
 # trimester of pregnancy and the α-diversity of the child gut microbiota at 12 
 # months (mixture effects analysis, n = 349).
 
-# Table A.5 ----
+## Table A.5 ----
 # Adjusted associations between concentrations of chemicals during the third 
 # trimester of pregnancy and the α-diversity of the child gut microbiota at 12 
 # months (mixture effects analysis, n=344).
 
-# Table A.6 ----
+## Table A.6 ----
 # Adjusted associations between concentrations of chemicals at twelve months and 
 # the α-diversity of the child gut microbiota at 12 months (mixture effects 
 # analysis, n=345).
 
-# Table A.7 ----
+## Table A.7 ----
+# Posterior inclusion probabilities of the chemicals to be included in the mixture 
+# effect models on α-diversity indices (BKMR mixture models, sample size between 
+# 344 and 349).
+
+## Table A.8 ----
+# Adjusted associations between concentrations of chemicals and Bray-Curtis β-
+# diversity of the child gut microbiota at 12-month-old (sample size between 344 
+# and 349).
+
+## Table A.9 ----
 # Adjusted associations between concentrations of chemicals without identified 
 # effects on α-diversity and the most abundant phyla in 12-month children gut 
-# microbiota (n between 350 and 355).
+# microbiota (sample size between 350 and 355).
 
-# Table A.8 ----
+## Table A.10 ----
+# Posterior inclusion probabilities of the chemicals to be included in the 
+# mixture effect models on the phyla relative abundances (BKMR mixture models, 
+# sample size between 344 and 349).
+
+## Table A.11 ----
 # Adjusted associations between concentrations of chemicals and the 46 most 
-# abundant genera in one-year children gut microbiota (n between 340 and 355).
+# abundant genera in one-year children gut microbiota (sample size between 340 
+# and 355).
 
-# Table A.9 ----
-# Adjusted associations between concentrations of chemicals and the gut 
-# microbiota α-diversity at different sequencing depths.
+## Table A.12 ----
+# Table A.12: Adjusted associations between concentrations of chemicals and the 
+# gut microbiota α-diversity at different sequencing depths.
 
-# Table A.10 ----
-# Adjusted associations between concentrations of chemicals and the gut 
-# microbiota composition before and after adjustment for specific gravity.
+## Table A.13 ----
+# Table A.13: Adjusted associations between concentrations of chemicals and the 
+# gut microbiota composition before and after adjustment for specific gravity.
 
-# Figure A.1 ----
+
+## Figure A.1 ----
 # Directed acyclic graph of the relation between concentrations of chemicals and 
 # child gut microbiota at 12 months of age.
 
-# Figure A.2 ----
+
+## Figure A.2 ----
 # Pearson correlations between concentrations of chemicals assessed during 
-# various exposure windows.  
+# various exposure windows (n = 344).  
 load("2_final_data/metadata.RData")
 load("2_final_data/bdd_alpha.RData")
 load("2_final_data/bdd_taxa.RData")
@@ -230,8 +251,8 @@ corrplot(heatmap_phthalates,
            col = rev(COL2(diverging = "RdYlBu")))
 dev.off()
 
-# Figure A.3 ----
-# Spearman correlations between concentrations of chemicals and covariates.
+## Figure A.3 ----
+# Spearman correlations between concentrations of chemicals and covariates (n=344).
 load("2_final_data/metadata.RData")
 load("2_final_data/bdd_alpha.RData")
 load("2_final_data/bdd_taxa.RData")
@@ -319,15 +340,9 @@ corrplot(cormat,
 dev.off()
 rm(list = ls())
 
-# Figure A.4 ----
-# Estimated effect of an increase  from the 25th to 75th percentile in a single 
-# chemical concentration on α-diversity indices when all other chemicals are 
-# fixed at either the 25th, 50th, or 75th percentiles (mixture models, n between 
-# 344 and 349).
-
-# Figure A.5 ----
-# Pearson correlations between the α-diversity  indices and the most abundant 
-# taxa in the gut microbiota of SEPAGES children.
+## Figure A.4 ----
+# Pearson correlations between the α-diversity indices and the most abundant 
+# phyla in the gut microbiota of SEPAGES children (n=350).
 load("2_final_data/metadata.RData")
 load("2_final_data/bdd_alpha.RData")
 load("2_final_data/bdd_taxa.RData")
@@ -346,7 +361,6 @@ bdd <- bdd %>%
          "Bacteroidetes" = "ch_feces_rel_p3_Y1", 
          "Proteobacteria" = "ch_feces_rel_p4_Y1")
 
-
 heatmap_phthalates <- cor(bdd, 
                           use = "pairwise.complete.obs", 
                           method = "pearson")
@@ -364,3 +378,183 @@ corrplot(heatmap_phthalates,
          col = rev(COL2(diverging = "RdYlBu")))
 dev.off()
 rm(list = ls())
+
+## Figure A.5 ----
+# Estimated effect of an increase from the 25th to 75th percentile in a single 
+# chemical concentration on α-diversity indices when all other chemicals are fixed at either the 25th, 50th, or 75th percentiles (mixture models, sample size between 344 and 349).
+
+## Figure A.6 ----
+# Estimated effect of an increase from the 25th to 75th percentile in a single 
+# chemical concentration on the 4 most abundant phyla when all other chemicals 
+# are fixed at either the 25th, 50th, or 75th percentiles (mixture models, sample 
+# size between 350 and 355).
+
+
+
+# Poster Journée scientifique UGA ----
+## Figure 1 ----
+load("4_output/results_genera.RData")
+
+forestplot <- function(results_list, outcome_name) {
+  results <- results_list %>%
+    ggplot(aes(x = exposure,
+               y = estimate,
+               min = conf.low,
+               ymax = conf.high,
+               #color = interaction(exposure_window, term_2),
+               #color = term_rec,
+               color = FWER.p.value_shape)) +
+    geom_hline(yintercept = 0, linetype="dashed") +
+    geom_pointrange(position = position_dodge(width = 0.7), size = 0.4,
+                    aes(color = ifelse(FWER.p.value_shape_alpha == "p.value >0.0012", "p.value >0.0012", "p.value <0.0012"))) +
+    labs(x = "Exposures", y = outcome_name) +
+    theme_bw() +
+    coord_flip()  +
+    scale_color_manual(values = c("black", "red"),
+                       name = "") +
+    #guides(color = "none")+
+    theme(axis.title = element_text(size = 9),
+          axis.text = element_text(size = 9),
+          legend.text = element_text(size = 9),
+          legend.title = element_text(size = 9),
+          legend.position = "bottom",
+          legend.box = "vertical",
+          legend.justification = "center",
+          legend.spacing.y = unit(0, "cm"),
+          legend.spacing.x = unit(0, "cm"),
+          legend.box.margin = margin(0,0,0,0, "cm"),
+          legend.margin = margin(0,0,0,0, "cm"), 
+          #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+          plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+          legend.background = element_rect(fill = NA)  # Fond transparent pour la légende, si nécessaire
+    )
+  
+  
+  return(results)
+}
+
+forestplot_shannon <- function(results_list, outcome_name) {
+  results <- results_list %>%
+    ggplot(aes(x = exposure,
+               y = estimate,
+               min = conf.low,
+               ymax = conf.high,
+               #color = interaction(exposure_window, term_2),
+               #color = term_rec,
+               color = FWER.p.value_shape)) +
+    geom_hline(yintercept = 0, linetype="dashed") +
+    geom_pointrange(position = position_dodge(width = 0.7), size = 0.4,
+                    aes(color = ifelse(FWER.p.value_shape_alpha == "p.value >0.0012", "p.value >0.0012", "p.value <0.0012"))) +
+    labs(x = "Exposures", y = outcome_name) +
+    theme_bw() +
+    coord_flip()  +
+    scale_color_manual(values = c( "red", "black"),
+                       name = "") +
+    #guides(color = "none")+
+    theme(axis.title = element_text(size = 9),
+          axis.text = element_text(size = 9),
+          legend.text = element_text(size = 9),
+          legend.title = element_text(size = 9),
+          legend.position = "bottom",
+          legend.box = "vertical",
+          legend.justification = "center",
+          legend.spacing.y = unit(0, "cm"),
+          legend.spacing.x = unit(0, "cm"),
+          legend.box.margin = margin(0,0,0,0, "cm"),
+          legend.margin = margin(0,0,0,0, "cm"), 
+          #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+          plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+          legend.background = element_rect(fill = NA)  # Fond transparent pour la légende, si nécessaire
+  )
+  
+  return(results)
+}
+
+leg <- results_multi %>%
+  filter(outcome == "Shannon diversity") %>%
+  filter(model_type == "adjusted") %>%
+  forestplot_shannon(outcome_name = "Shannon diversity") +
+  theme(axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+        plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+        legend.background = element_rect(fill = NA) )
+leg <- get_legend(leg) %>% as_ggplot()
+
+y_axis <-
+  results_multi %>%
+  filter(outcome == "Specific richness") %>%
+  filter(model_type == "adjusted") %>%
+  forestplot(outcome_name = "Specific richness") +
+  theme(legend.position = "none",
+        #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+        plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+        legend.background = element_rect(fill = NA) )
+
+forestplot_alpha_1 <-
+  results_multi %>%
+  filter(outcome == "Specific richness") %>%
+  filter(model_type == "adjusted") %>%
+  forestplot(outcome_name = "Specific richness") +
+  theme(legend.position = "none",
+        axis.text.y = element_blank(), axis.title.y = element_blank(),
+        #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+        plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+        legend.background = element_rect(fill = NA) )
+
+forestplot_alpha_2 <-
+  results_multi %>%
+  filter(outcome == "Shannon diversity") %>%
+  filter(model_type == "adjusted") %>%
+  forestplot_shannon(outcome_name = "Shannon diversity") +
+  theme(axis.text.y = element_blank(), axis.title.y = element_blank(),
+        legend.position = "none", 
+        #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+        plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+        legend.background = element_rect(fill = NA) )
+
+
+fig_1 <- 
+  (forestplot_alpha_1 + forestplot_alpha_2) / leg + 
+  plot_layout(heights = c(14, 1))
+
+fig_1 <- fig_1 + 
+  theme(
+    #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+    plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+    legend.background = element_rect(fill = NA)  # Fond transparent pour la légende, si nécessaire
+  )
+
+rm(forestplot_alpha_1, forestplot_alpha_2, leg)
+
+ggsave("4_output/poster_uga/axis_y.tiff", 
+       plot = y_axis, 
+       device = "tiff",
+       units = "mm",
+       width = 100, 
+       height = 180,
+       dpi = 300,
+       limitsize = FALSE)
+
+ggsave("4_output/poster_uga/Figure 1 (forestplot_alpha_phthalates).tiff", 
+       plot = forestplot_alpha_1, 
+       device = "tiff",
+       units = "mm",
+       width = 80, 
+       height = 180,
+       dpi = 300,
+       limitsize = FALSE)
+
+ggsave("4_output/poster_uga/Figure 2 (forestplot_alpha_phthalates).tiff", 
+       plot = forestplot_alpha_2, 
+       device = "tiff",
+       units = "mm",
+       width = 80, 
+       height = 180,
+       dpi = 300,
+       limitsize = FALSE)
+
+
+
+## Figure 2 ----
+## Figure 3 ----
