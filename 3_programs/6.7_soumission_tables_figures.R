@@ -393,16 +393,13 @@ rm(list = ls())
 
 # Poster Journée scientifique UGA ----
 ## Figure 1 ----
-load("4_output/results_genera.RData")
-
+load("4_output/results_alpha_phyla.RData")
 forestplot <- function(results_list, outcome_name) {
   results <- results_list %>%
     ggplot(aes(x = exposure,
                y = estimate,
                min = conf.low,
                ymax = conf.high,
-               #color = interaction(exposure_window, term_2),
-               #color = term_rec,
                color = FWER.p.value_shape)) +
     geom_hline(yintercept = 0, linetype="dashed") +
     geom_pointrange(position = position_dodge(width = 0.7), size = 0.4,
@@ -412,23 +409,21 @@ forestplot <- function(results_list, outcome_name) {
     coord_flip()  +
     scale_color_manual(values = c("black", "red"),
                        name = "") +
-    #guides(color = "none")+
-    theme(axis.title = element_text(size = 9),
-          axis.text = element_text(size = 9),
-          legend.text = element_text(size = 9),
-          legend.title = element_text(size = 9),
-          legend.position = "bottom",
-          legend.box = "vertical",
-          legend.justification = "center",
-          legend.spacing.y = unit(0, "cm"),
-          legend.spacing.x = unit(0, "cm"),
-          legend.box.margin = margin(0,0,0,0, "cm"),
-          legend.margin = margin(0,0,0,0, "cm"), 
-          #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
-          plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
-          legend.background = element_rect(fill = NA)  # Fond transparent pour la légende, si nécessaire
-    )
-  
+    theme(
+      # axis.title = element_text(size = 9),
+      # axis.text = element_text(size = 9),
+      legend.text = element_text(size = 9),
+      legend.title = element_text(size = 9),
+      legend.position = "bottom",
+      legend.box = "vertical",
+      legend.justification = "center",
+      legend.spacing.y = unit(0, "cm"),
+      legend.spacing.x = unit(0, "cm"),
+      legend.box.margin = margin(0,0,0,0, "cm"),
+      legend.margin = margin(0,0,0,0, "cm"), 
+      #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+      plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+      legend.background = element_rect(fill = NA))
   
   return(results)
 }
@@ -439,8 +434,6 @@ forestplot_shannon <- function(results_list, outcome_name) {
                y = estimate,
                min = conf.low,
                ymax = conf.high,
-               #color = interaction(exposure_window, term_2),
-               #color = term_rec,
                color = FWER.p.value_shape)) +
     geom_hline(yintercept = 0, linetype="dashed") +
     geom_pointrange(position = position_dodge(width = 0.7), size = 0.4,
@@ -450,22 +443,21 @@ forestplot_shannon <- function(results_list, outcome_name) {
     coord_flip()  +
     scale_color_manual(values = c( "red", "black"),
                        name = "") +
-    #guides(color = "none")+
-    theme(axis.title = element_text(size = 9),
-          axis.text = element_text(size = 9),
-          legend.text = element_text(size = 9),
-          legend.title = element_text(size = 9),
-          legend.position = "bottom",
-          legend.box = "vertical",
-          legend.justification = "center",
-          legend.spacing.y = unit(0, "cm"),
-          legend.spacing.x = unit(0, "cm"),
-          legend.box.margin = margin(0,0,0,0, "cm"),
-          legend.margin = margin(0,0,0,0, "cm"), 
-          #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
-          plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
-          legend.background = element_rect(fill = NA)  # Fond transparent pour la légende, si nécessaire
-  )
+    theme(
+      # axis.title = element_text(size = 9),
+      # axis.text = element_text(size = 9),
+      legend.text = element_text(size = 9),
+      legend.title = element_text(size = 9),
+      legend.position = "bottom",
+      legend.box = "vertical",
+      legend.justification = "center",
+      legend.spacing.y = unit(0, "cm"),
+      legend.spacing.x = unit(0, "cm"),
+      legend.box.margin = margin(0,0,0,0, "cm"),
+      legend.margin = margin(0,0,0,0, "cm"), 
+      #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+      plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+      legend.background = element_rect(fill = NA))
   
   return(results)
 }
@@ -475,86 +467,463 @@ leg <- results_multi %>%
   filter(model_type == "adjusted") %>%
   forestplot_shannon(outcome_name = "Shannon diversity") +
   theme(axis.text.y = element_blank(), 
-        axis.title.y = element_blank(), 
-        #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
-        plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
-        legend.background = element_rect(fill = NA) )
+        axis.title.y = element_blank())
 leg <- get_legend(leg) %>% as_ggplot()
 
-y_axis <-
-  results_multi %>%
-  filter(outcome == "Specific richness") %>%
-  filter(model_type == "adjusted") %>%
-  forestplot(outcome_name = "Specific richness") +
-  theme(legend.position = "none",
-        #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
-        plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
-        legend.background = element_rect(fill = NA) )
 
 forestplot_alpha_1 <-
   results_multi %>%
   filter(outcome == "Specific richness") %>%
-  filter(model_type == "adjusted") %>%
   forestplot(outcome_name = "Specific richness") +
-  theme(legend.position = "none",
-        axis.text.y = element_blank(), axis.title.y = element_blank(),
-        #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
-        plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
-        legend.background = element_rect(fill = NA) )
+  theme(legend.position = "none")
 
 forestplot_alpha_2 <-
   results_multi %>%
   filter(outcome == "Shannon diversity") %>%
-  filter(model_type == "adjusted") %>%
   forestplot_shannon(outcome_name = "Shannon diversity") +
-  theme(axis.text.y = element_blank(), axis.title.y = element_blank(),
-        legend.position = "none", 
-        #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
-        plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
-        legend.background = element_rect(fill = NA) )
+  theme(axis.text.y = element_blank(), 
+        axis.title.y = element_blank(),
+        legend.position = "none")
 
 
 fig_1 <- 
   (forestplot_alpha_1 + forestplot_alpha_2) / leg + 
-  plot_layout(heights = c(14, 1))
-
-fig_1 <- fig_1 + 
-  theme(
-    #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
-    plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
-    legend.background = element_rect(fill = NA)  # Fond transparent pour la légende, si nécessaire
-  )
+  plot_layout(heights = c(14, 1))&
+  plot_annotation(
+    theme = theme(
+      #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+      plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+      legend.background = element_rect(fill = NA)))
 
 rm(forestplot_alpha_1, forestplot_alpha_2, leg)
 
-ggsave("4_output/poster_uga/axis_y.tiff", 
-       plot = y_axis, 
-       device = "tiff",
-       units = "mm",
-       width = 100, 
-       height = 180,
-       dpi = 300,
-       limitsize = FALSE)
 
 ggsave("4_output/poster_uga/Figure 1 (forestplot_alpha_phthalates).tiff", 
-       plot = forestplot_alpha_1, 
+       plot = fig_1, 
        device = "tiff",
        units = "mm",
-       width = 80, 
-       height = 180,
+       width = 182, 
+       height = 200,
        dpi = 300,
        limitsize = FALSE)
-
-ggsave("4_output/poster_uga/Figure 2 (forestplot_alpha_phthalates).tiff", 
-       plot = forestplot_alpha_2, 
-       device = "tiff",
-       units = "mm",
-       width = 80, 
-       height = 180,
-       dpi = 300,
-       limitsize = FALSE)
-
 
 
 ## Figure 2 ----
+load("4_output/bkmr/Run3 (ms)/resuts_bkmr_overall_phthalates_alpha_run3ms.RData")
+list2env(list_overall, envir = .GlobalEnv)
+rm(results_bkmr_overall_phthalates_fai_t2, results_bkmr_overall_phthalates_fai_t3, results_bkmr_overall_phthalates_fai_Y1, list_overall)
+results_bkmr_overall_phthalates_rich_t2 <- results_bkmr_overall_phthalates_rich_t2 %>% rename(est_rich_t2 = est, sd_rich_t2 = sd)
+results_bkmr_overall_phthalates_sha_t2 <- results_bkmr_overall_phthalates_sha_t2 %>% rename(est_sha_t2 = est, sd_sha_t2 = sd)
+
+results_bkmr_overall_phthalates_rich_t3 <- results_bkmr_overall_phthalates_rich_t3 %>% rename(est_rich_t3 = est, sd_rich_t3 = sd)
+results_bkmr_overall_phthalates_sha_t3 <- results_bkmr_overall_phthalates_sha_t3 %>% rename(est_sha_t3 = est, sd_sha_t3 = sd)
+
+results_bkmr_overall_phthalates_rich_Y1 <- results_bkmr_overall_phthalates_rich_Y1 %>% rename(est_rich_Y1 = est, sd_rich_Y1 = sd)
+results_bkmr_overall_phthalates_sha_Y1 <- results_bkmr_overall_phthalates_sha_Y1 %>% rename(est_sha_Y1 = est, sd_sha_Y1 = sd)
+
+
+results_bkmr_overall_phthalates_alpha <- 
+  results_bkmr_overall_phthalates_rich_t2 %>%
+  left_join(results_bkmr_overall_phthalates_sha_t2, by = "quantile") %>%
+  
+  left_join(results_bkmr_overall_phthalates_rich_t3, by =  "quantile") %>%
+  left_join(results_bkmr_overall_phthalates_sha_t3, by =  "quantile") %>%
+  
+  left_join(results_bkmr_overall_phthalates_rich_Y1, by =  "quantile") %>%
+  left_join(results_bkmr_overall_phthalates_sha_Y1, by =  "quantile") 
+
+
+plot_risks.overall <- function(risks.overall, est, sd, title, y_title){
+  ggplot(risks.overall,
+         aes(
+           quantile,
+           {{est}},
+           ymin = {{est}} - 1.96 * {{sd}},
+           ymax = {{est}} + 1.96 * {{sd}}
+         )) +
+    geom_pointrange() +
+    labs(y = y_title) + 
+    geom_hline(yintercept = 0, linetype = "dashed", color = "red")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12), 
+          #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+          plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+          legend.background = element_rect(fill = NA)) +  # Fond transparent pour la légende, si nécessaire 
+    ggtitle(title)
+}
+
+plot_risks.overall_phthalates_alpha_run3 <- 
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_rich_t2, 
+    sd = sd_rich_t2, 
+    title = bquote("2"^{nd}~trim.~exposure), 
+    y_title = "Specific richness") +
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_sha_t2, 
+    sd = sd_sha_t2, 
+    title = bquote("2"^{nd}~trim.~exposure), 
+    y_title = "Shannon diversity") + 
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_rich_t3, 
+    sd = sd_rich_t3, 
+    title = bquote("3"^{rd}~trim.~exposure), 
+    y_title = "Specific richness") +
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_sha_t3, 
+    sd = sd_sha_t3, 
+    title = bquote("3"^{rd}~trim.~exposure), 
+    y_title = "Shannon diversity") + 
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_rich_Y1, 
+    sd = sd_rich_Y1, 
+    title = "12-month exposure", 
+    y_title = "Specific richness") + 
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_sha_Y1, 
+    sd = sd_sha_Y1, 
+    title = "12-month exposure", 
+    y_title = "Shannon diversity") +  
+  
+  plot_layout(ncol = 2, nrow = 3) &
+  plot_annotation(
+    theme = theme(
+      #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+      plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+      legend.background = element_rect(fill = NA)))
+
+ggsave("4_output/poster_uga/Figure 2 (plot_risks.overall_phthalates_alpha_run3).tiff", 
+       plot = plot_risks.overall_phthalates_alpha_run3, 
+       device = "tiff",
+       units = "mm",
+       width = 182, 
+       height = 200,
+       dpi = 300,
+       limitsize = FALSE)
+
+
 ## Figure 3 ----
+load("4_output/results_genera.RData")
+mahatan_plot <- table_log  %>%
+  mutate(
+    categorie = 
+      fct_relevel(categorie, 
+                  "Saccharibacteria genera incertae sedis", "Peptoniphilus",
+                  "Granulicatella", "Anaerotruncus", "Lactococcus", "Terrisporobacter",
+                  "Oscillibacter", "Haemophilus", "Coprococcus", "Erysipelotrichaceae incertae sedis",
+                  "Butyricicoccus", "Dialister", "Subdoligranulum", "Intestinibacter",
+                  "Klebsiella", "Eisenbergiella", "Hungatella", "Dorea", "Eggerthella",
+                  "Romboutsia", "Clostridium IV", "Ruminococcus 2", "Flavonifractor",
+                  "Alistipes", "Collinsella", "Parabacteroides", "Fusicatenibacter",
+                  "Veillonella", "Roseburia", "Enterobacter", "Cellulosibacter",
+                  "Enterococcus", "Clostridium sensu stricto", "Clostridium XVIII",
+                  "Ruminococcus", "Gemmiger", "Anaerostipes", "Lachnospiracea incertae sedis",
+                  "Clostridium XlVa", "Streptococcus", "Faecalibacterium", "Akkermansia",
+                  "Escherichia and Shigella", "Blautia", "Bacteroides", "Bifidobacterium", "  ", "   ")) %>%
+  ggplot(aes(x = -log10(`p-value`), y = categorie)) +
+  geom_point(aes(shape = sens_beta), size = 2) +
+  geom_vline(xintercept = -log10(0.05), linetype = "dashed", color = "red") +
+  geom_vline(xintercept = -log10(0.05/(14*33)), linetype = "dashed", color = "blue") +
+  theme_bw() +
+  labs(x = "-log10(P-value)", 
+       y = "", 
+       shape = "") +
+  geom_text(aes(label = ifelse(`p-value` < 0.008, as.character(Pollutants_Time_window_rec), "")), hjust = -0.07, vjust = -0.2, angle = 40, size = 3.5) +
+  scale_shape_manual(values = c("Beta<0" = 15, "Beta≥0" = 17)) +# 15: carré plein, 17: triangle plein
+  theme(
+    legend.position = "left",
+    legend.box = "vertical", 
+    legend.justification = "top", 
+    axis.text.y = element_text(face = "italic", size = 12),
+    #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+    plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+    legend.background = element_rect(fill = NA))  + # Fond transparent pour la légende, si nécessaire
+  xlim(0, 5.8) 
+
+ggsave("4_output/poster_uga/Figure 3 (manhattan_plot genera).tiff", 
+       mahatan_plot, 
+       device = "tiff",
+       units = "mm",
+       dpi = 300,
+       height = 255, 
+       width = 370)
+
+
+# Présentation team meeting Marc ----
+## Figure 1 ----
+load("4_output/results_alpha_phyla.RData")
+forestplot <- function(results_list, outcome_name) {
+  results <- results_list %>%
+    ggplot(aes(x = exposure,
+               y = estimate,
+               min = conf.low,
+               ymax = conf.high,
+               color = FWER.p.value_shape)) +
+    geom_hline(yintercept = 0, linetype="dashed") +
+    geom_pointrange(position = position_dodge(width = 0.7), size = 0.4,
+                    aes(color = ifelse(FWER.p.value_shape_alpha == "p.value >0.0012", "p.value >0.0012", "p.value <0.0012"))) +
+    labs(x = "Exposures", y = outcome_name) +
+    theme_bw() +
+    coord_flip()  +
+    scale_color_manual(values = c("black", "red"),
+                       name = "") +
+    theme(
+      # axis.title = element_text(size = 9),
+      # axis.text = element_text(size = 9),
+      legend.text = element_text(size = 9),
+      legend.title = element_text(size = 9),
+      legend.position = "bottom",
+      legend.box = "vertical",
+      legend.justification = "center",
+      legend.spacing.y = unit(0, "cm"),
+      legend.spacing.x = unit(0, "cm"),
+      legend.box.margin = margin(0,0,0,0, "cm"),
+      legend.margin = margin(0,0,0,0, "cm"), 
+      #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+      plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+      legend.background = element_rect(fill = NA))
+  
+  return(results)
+}
+
+forestplot_shannon <- function(results_list, outcome_name) {
+  results <- results_list %>%
+    ggplot(aes(x = exposure,
+               y = estimate,
+               min = conf.low,
+               ymax = conf.high,
+               color = FWER.p.value_shape)) +
+    geom_hline(yintercept = 0, linetype="dashed") +
+    geom_pointrange(position = position_dodge(width = 0.7), size = 0.4,
+                    aes(color = ifelse(FWER.p.value_shape_alpha == "p.value >0.0012", "p.value >0.0012", "p.value <0.0012"))) +
+    labs(x = "Exposures", y = outcome_name) +
+    theme_bw() +
+    coord_flip()  +
+    scale_color_manual(values = c( "red", "black"),
+                       name = "") +
+    theme(
+      # axis.title = element_text(size = 9),
+      # axis.text = element_text(size = 9),
+      legend.text = element_text(size = 9),
+      legend.title = element_text(size = 9),
+      legend.position = "bottom",
+      legend.box = "vertical",
+      legend.justification = "center",
+      legend.spacing.y = unit(0, "cm"),
+      legend.spacing.x = unit(0, "cm"),
+      legend.box.margin = margin(0,0,0,0, "cm"),
+      legend.margin = margin(0,0,0,0, "cm"), 
+      #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+      plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+      legend.background = element_rect(fill = NA))
+  
+  return(results)
+}
+
+leg <- results_multi %>%
+  filter(outcome == "Shannon diversity") %>%
+  filter(model_type == "adjusted") %>%
+  forestplot_shannon(outcome_name = "Shannon diversity") +
+  theme(axis.text.y = element_blank(), 
+        axis.title.y = element_blank())
+leg <- get_legend(leg) %>% as_ggplot()
+
+
+forestplot_alpha_1 <-
+  results_multi %>%
+  filter(outcome == "Specific richness") %>%
+  forestplot(outcome_name = "Specific richness") +
+  theme(legend.position = "none")
+
+forestplot_alpha_2 <-
+  results_multi %>%
+  filter(outcome == "Shannon diversity") %>%
+  forestplot_shannon(outcome_name = "Shannon diversity") +
+  theme(axis.text.y = element_blank(), 
+        axis.title.y = element_blank(),
+        legend.position = "none")
+
+
+fig_1 <- 
+  (forestplot_alpha_1 + forestplot_alpha_2) / leg + 
+  plot_layout(heights = c(14, 1))&
+  plot_annotation(
+    theme = theme(
+      #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+      plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+      legend.background = element_rect(fill = NA)))
+
+rm(forestplot_alpha_1, forestplot_alpha_2, leg)
+
+
+ggsave("4_output/poster_uga/Figure 1 (forestplot_alpha_phthalates).tiff", 
+       plot = fig_1, 
+       device = "tiff",
+       units = "mm",
+       width = 182, 
+       height = 200,
+       dpi = 300,
+       limitsize = FALSE)
+
+
+## Figure 2 ----
+load("4_output/bkmr/Run3 (ms)/resuts_bkmr_overall_phthalates_alpha_run3ms.RData")
+list2env(list_overall, envir = .GlobalEnv)
+rm(results_bkmr_overall_phthalates_fai_t2, results_bkmr_overall_phthalates_fai_t3, results_bkmr_overall_phthalates_fai_Y1, list_overall)
+results_bkmr_overall_phthalates_rich_t2 <- results_bkmr_overall_phthalates_rich_t2 %>% rename(est_rich_t2 = est, sd_rich_t2 = sd)
+results_bkmr_overall_phthalates_sha_t2 <- results_bkmr_overall_phthalates_sha_t2 %>% rename(est_sha_t2 = est, sd_sha_t2 = sd)
+
+results_bkmr_overall_phthalates_rich_t3 <- results_bkmr_overall_phthalates_rich_t3 %>% rename(est_rich_t3 = est, sd_rich_t3 = sd)
+results_bkmr_overall_phthalates_sha_t3 <- results_bkmr_overall_phthalates_sha_t3 %>% rename(est_sha_t3 = est, sd_sha_t3 = sd)
+
+results_bkmr_overall_phthalates_rich_Y1 <- results_bkmr_overall_phthalates_rich_Y1 %>% rename(est_rich_Y1 = est, sd_rich_Y1 = sd)
+results_bkmr_overall_phthalates_sha_Y1 <- results_bkmr_overall_phthalates_sha_Y1 %>% rename(est_sha_Y1 = est, sd_sha_Y1 = sd)
+
+
+results_bkmr_overall_phthalates_alpha <- 
+  results_bkmr_overall_phthalates_rich_t2 %>%
+  left_join(results_bkmr_overall_phthalates_sha_t2, by = "quantile") %>%
+  
+  left_join(results_bkmr_overall_phthalates_rich_t3, by =  "quantile") %>%
+  left_join(results_bkmr_overall_phthalates_sha_t3, by =  "quantile") %>%
+  
+  left_join(results_bkmr_overall_phthalates_rich_Y1, by =  "quantile") %>%
+  left_join(results_bkmr_overall_phthalates_sha_Y1, by =  "quantile") 
+
+
+plot_risks.overall <- function(risks.overall, est, sd, title, y_title){
+  ggplot(risks.overall,
+         aes(
+           quantile,
+           {{est}},
+           ymin = {{est}} - 1.96 * {{sd}},
+           ymax = {{est}} + 1.96 * {{sd}}
+         )) +
+    geom_pointrange() +
+    labs(y = y_title) + 
+    geom_hline(yintercept = 0, linetype = "dashed", color = "red")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12), 
+          #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+          plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+          legend.background = element_rect(fill = NA)) +  # Fond transparent pour la légende, si nécessaire 
+    ggtitle(title)
+}
+
+plot_risks.overall_phthalates_alpha_run3 <- 
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_rich_t2, 
+    sd = sd_rich_t2, 
+    title = bquote("2"^{nd}~trim.~exposure), 
+    y_title = "Specific richness") +
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_sha_t2, 
+    sd = sd_sha_t2, 
+    title = bquote("2"^{nd}~trim.~exposure), 
+    y_title = "Shannon diversity") + 
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_rich_t3, 
+    sd = sd_rich_t3, 
+    title = bquote("3"^{rd}~trim.~exposure), 
+    y_title = "Specific richness") +
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_sha_t3, 
+    sd = sd_sha_t3, 
+    title = bquote("3"^{rd}~trim.~exposure), 
+    y_title = "Shannon diversity") + 
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_rich_Y1, 
+    sd = sd_rich_Y1, 
+    title = "12-month exposure", 
+    y_title = "Specific richness") + 
+  
+  plot_risks.overall(
+    results_bkmr_overall_phthalates_alpha, 
+    est = est_sha_Y1, 
+    sd = sd_sha_Y1, 
+    title = "12-month exposure", 
+    y_title = "Shannon diversity") +  
+  
+  plot_layout(ncol = 2, nrow = 3) &
+  plot_annotation(
+    theme = theme(
+      #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+      plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+      legend.background = element_rect(fill = NA)))
+
+ggsave("4_output/poster_uga/Figure 2 (plot_risks.overall_phthalates_alpha_run3).tiff", 
+       plot = plot_risks.overall_phthalates_alpha_run3, 
+       device = "tiff",
+       units = "mm",
+       width = 182, 
+       height = 200,
+       dpi = 300,
+       limitsize = FALSE)
+
+
+## Figure 3 ----
+load("4_output/results_genera.RData")
+mahatan_plot <- table_log  %>%
+  mutate(
+    categorie = 
+      fct_relevel(categorie, 
+                  "Saccharibacteria genera incertae sedis", "Peptoniphilus",
+                  "Granulicatella", "Anaerotruncus", "Lactococcus", "Terrisporobacter",
+                  "Oscillibacter", "Haemophilus", "Coprococcus", "Erysipelotrichaceae incertae sedis",
+                  "Butyricicoccus", "Dialister", "Subdoligranulum", "Intestinibacter",
+                  "Klebsiella", "Eisenbergiella", "Hungatella", "Dorea", "Eggerthella",
+                  "Romboutsia", "Clostridium IV", "Ruminococcus 2", "Flavonifractor",
+                  "Alistipes", "Collinsella", "Parabacteroides", "Fusicatenibacter",
+                  "Veillonella", "Roseburia", "Enterobacter", "Cellulosibacter",
+                  "Enterococcus", "Clostridium sensu stricto", "Clostridium XVIII",
+                  "Ruminococcus", "Gemmiger", "Anaerostipes", "Lachnospiracea incertae sedis",
+                  "Clostridium XlVa", "Streptococcus", "Faecalibacterium", "Akkermansia",
+                  "Escherichia and Shigella", "Blautia", "Bacteroides", "Bifidobacterium", "  ", "   ")) %>%
+  ggplot(aes(x = -log10(`p-value`), y = categorie)) +
+  geom_point(aes(shape = sens_beta), size = 2) +
+  geom_vline(xintercept = -log10(0.05), linetype = "dashed", color = "red") +
+  geom_vline(xintercept = -log10(0.05/(14*33)), linetype = "dashed", color = "blue") +
+  theme_bw() +
+  labs(x = "-log10(P-value)", 
+       y = "", 
+       shape = "") +
+  geom_text(aes(label = ifelse(`p-value` < 0.008, as.character(Pollutants_Time_window_rec), "")), hjust = -0.07, vjust = -0.2, angle = 40, size = 3.5) +
+  scale_shape_manual(values = c("Beta<0" = 15, "Beta≥0" = 17)) +# 15: carré plein, 17: triangle plein
+  theme(
+    legend.position = "left",
+    legend.box = "vertical", 
+    legend.justification = "top", 
+    axis.text.y = element_text(face = "italic", size = 12),
+    #panel.background = element_rect(fill = NA, colour = NA),   # Fond transparent pour le panneau de tracé
+    plot.background = element_rect(fill = NA, colour = NA),    # Fond transparent pour l'arrière-plan du plot
+    legend.background = element_rect(fill = NA))  + # Fond transparent pour la légende, si nécessaire
+  xlim(0, 5.8) 
+
+ggsave("4_output/poster_uga/Figure 3 (manhattan_plot genera).tiff", 
+       mahatan_plot, 
+       device = "tiff",
+       units = "mm",
+       dpi = 300,
+       height = 255, 
+       width = 370)
