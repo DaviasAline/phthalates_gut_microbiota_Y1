@@ -35,6 +35,11 @@ library(vegan)
 library(SRS)
 library(see)
 library(corrplot)
+library(bkmr)
+library(fields)
+library(future)
+library(future.apply)
+library(writexl)
 
 # Chargement des données ----
 load("1_intermediate_data/2_data_selection_AD_gumme.RData")
