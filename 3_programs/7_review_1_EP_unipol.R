@@ -61,6 +61,7 @@ asv_raw_not_rarefied <-              # pour les analyses betadiv
 
 # Création des fonctions ----
 source("3_programs/3_functions_AD_gumme.R", echo=TRUE)
+rm(model_covar, model_multi, model_summary, model_univ_multi)
 
 # Fonction pour générer un tableau de régression
 generate_tbl <- function(outcome, var, covariates, data) {
@@ -231,11 +232,6 @@ results_main <- results_main %>%                                                
                                      "ch_feces_rel_p2_Y1" = "Actinobacteria", 
                                      "ch_feces_rel_p3_Y1" = "Bacteroidetes", 
                                      "ch_feces_rel_p4_Y1" = "Proteobacteria")),
-    # p_value_shape = case_when(p.value < 0.1 ~ "p.value <0.1",
-    #                           p.value > 0.1 ~ "p.value >0.1"), 
-    # p_value_shape = fct_relevel(p_value_shape,
-    #                             "p.value >0.1", 
-    #                             "p.value <0.1"),
     Window = case_when(grepl("t2", Exposure_window) ~ "Trim.2", 
                                 grepl("t3", Exposure_window) ~ "Trim.3", 
                                 grepl("Y1", Exposure_window) ~ "12 months", 
@@ -405,25 +401,6 @@ explanatory_vars_t2 <-
   select(contains("t2")) %>%
   colnames()
 
-# results_betadiv_univar_bray_curtis_t2 <- 
-#   lapply(explanatory_vars_t2, function(x) {
-#     formula <- reformulate(x, response = "all_dist_t2")
-#     adonis2(formula, data = bdd_betadiv_t2, permutations = 999)
-#   })
-# results_betadiv_univar_bray_curtis_t2 <- 
-#   do.call(rbind, results_betadiv_univar_bray_curtis_t2) %>%
-#   rownames_to_column(var = "Explanatory variables") %>%
-#   mutate(
-#     Pollutants = c(rep("mo_DEHP_ms_i_cor_t2_ter", times = 3), 
-#                    rep("mo_MnBP_i_cor_t2_ter", times = 3), 
-#                    rep("mo_DiNP_ms_i_cor_t2_ter", times = 3),
-#                    rep("mo_MiBP_i_cor_t2_ter", times = 3),
-#                    rep("mo_MBzP_i_cor_t2_ter", times = 3),
-#                    rep("mo_MEP_i_cor_t2_ter", times = 3),
-#                    rep("mo_ohMPHP_i_cor_t2_ter", times = 3),
-#                    rep("mo_DINCH_ms_i_cor_t2_ter", times = 3))) %>%
-#   select(Pollutants, everything())
-
 results_betadiv_multivar_bray_curtis_t2 <-
   lapply(explanatory_vars_t2, function(x) {
     formula <- reformulate(c(x, covariates_pre_beta), response = "all_dist_t2")
@@ -443,10 +420,6 @@ results_betadiv_multivar_bray_curtis_t2 <-
                    rep("mo_DINCH_ms_i_cor_t2_ter", times = 18))) %>%
   select(Pollutants, everything())
 
-# results_betadiv_univar_bray_curtis_t2 %>%                         # Visualisation des résultats significatifs univarié
-#   filter(`Pr(>F)` < 0.05) %>%
-#   filter(`Explanatory variables` %in% c(explanatory_vars_t2)) %>%
-#   View()
 
 results_betadiv_multivar_bray_curtis_t2 %>%                      # Visualisation des résultats significatifs multivarié
   filter(`Pr(>F)` < 0.05) %>%
@@ -471,24 +444,6 @@ explanatory_vars_t3 <-
   select(contains("t3")) %>%
   colnames()
 
-# results_betadiv_univar_bray_curtis_t3 <- 
-#   lapply(explanatory_vars_t3, function(x) {
-#     formula <- reformulate(x, response = "all_dist_t3")
-#     adonis2(formula, data = bdd_betadiv_t3, permutations = 999)
-#   })
-# results_betadiv_univar_bray_curtis_t3 <- 
-#   do.call(rbind, results_betadiv_univar_bray_curtis_t3) %>%
-#   rownames_to_column(var = "Explanatory variables") %>%
-#   mutate(
-#     Pollutants = c(rep("mo_DEHP_ms_i_cor_t3_ter", times = 3), 
-#                    rep("mo_MnBP_i_cor_t3_ter", times = 3), 
-#                    rep("mo_DiNP_ms_i_cor_t3_ter", times = 3),
-#                    rep("mo_MiBP_i_cor_t3_ter", times = 3),
-#                    rep("mo_MBzP_i_cor_t3_ter", times = 3),
-#                    rep("mo_MEP_i_cor_t3_ter", times = 3),
-#                    rep("mo_ohMPHP_i_cor_t3_ter", times = 3),
-#                    rep("mo_DINCH_ms_i_cor_t3_ter", times = 3))) %>%
-#   select(Pollutants, everything())
 
 results_betadiv_multivar_bray_curtis_t3 <-
   lapply(explanatory_vars_t3, function(x) {
@@ -537,24 +492,6 @@ explanatory_vars_Y1 <-
   select(contains("Y1")) %>%
   colnames()
 
-# results_betadiv_univar_bray_curtis_Y1 <- 
-#   lapply(explanatory_vars_Y1, function(x) {
-#     formula <- reformulate(x, response = "all_dist_Y1")
-#     adonis2(formula, data = bdd_betadiv_Y1, permutations = 999)
-#   })
-# results_betadiv_univar_bray_curtis_Y1 <- 
-#   do.call(rbind, results_betadiv_univar_bray_curtis_Y1) %>%
-#   rownames_to_column(var = "Explanatory variables") %>%
-#   mutate(
-#     Pollutants = c(rep("ch_DEHP_ms_i_cor_Y1_ter", times = 3), 
-#                    rep("ch_MnBP_i_cor_Y1_ter", times = 3), 
-#                    rep("ch_DiNP_ms_i_cor_Y1_ter", times = 3),
-#                    rep("ch_MiBP_i_cor_Y1_ter", times = 3),
-#                    rep("ch_MBzP_i_cor_Y1_ter", times = 3),
-#                    rep("ch_MEP_i_cor_Y1_ter", times = 3),
-#                    rep("ch_ohMPHP_i_cor_Y1_ter", times = 3),
-#                    rep("ch_DINCH_ms_i_cor_Y1_ter", times = 3))) %>%
-#   select(Pollutants, everything())
 
 results_betadiv_multivar_bray_curtis_Y1 <-
   lapply(explanatory_vars_Y1, function(x) {
@@ -575,10 +512,6 @@ results_betadiv_multivar_bray_curtis_Y1 <-
                    rep("ch_DINCH_ms_i_cor_Y1_ter", times = 21))) %>%
   select(Pollutants, everything())
 
-# results_betadiv_univar_bray_curtis_Y1 %>%            # Visualisation des résultats significatifs univarié
-#   filter(`Pr(>F)` < 0.05) %>%
-#   filter(`Explanatory variables` %in% c(explanatory_vars_Y1)) %>%
-#   View()
 
 results_betadiv_multivar_bray_curtis_Y1 %>%         # Visualisation des résultats significatifs multivarié
   filter(`Pr(>F)` < 0.05) %>%
@@ -887,6 +820,7 @@ Table_S5 <- Table_S5 %>%
 write.xlsx(Table_S5, file = "4_output/review/Table_S5 (descrip outcomes).xlsx")
 
 ## Table S6 : alpha div - multivar (PIP) ----
+# cf code 7.1_revision_1_EP_multipol.R
 
 ## Table S7 : beta div - univar ----
 Table_S7 <- do.call(rbind, results_betadiv, quote = FALSE)
@@ -897,12 +831,14 @@ Table_S7 <-
                                       `Explanatory variables`,
                                       str_remove(`Explanatory variables`, "\\d+$"))) %>%
   filter(`Explanatory variables` %in% phthalates_ter) %>%
-  select(-`Explanatory variables`, -Df, -R2) %>%
+  select(-Df, -R2) %>%
   mutate(
     Pollutants = factor(Pollutants, 
                         levels = phthalates_ter)) %>%
   arrange(Pollutants)
 rm(phthalates_ter)
+
+write_xlsx(Table_S7, "4_output/review/Table_S7.xlsx")
 
 ## Table S8 : phyla - univar ----
 Table_S8 <- create_tbl_for_range(3:6, phyla_vec)
@@ -913,6 +849,7 @@ Table_S8 <- Table_S8 %>%
                                              "ch_ohMPHP_i_cor_Y1_ln")))
 
 ## Table S9 : phyla - multivar (PIP) ----
+# cf code 7.1_revision_1_EP_multipol.R
 
 ## Table S10 : genera - univar ----
 Table_S10 <- create_tbl_for_range(7:52, genera_vec)
@@ -1003,6 +940,8 @@ Table_S11 <- Table_S11_a %>%
   left_join(Table_S11_b, by = c("Outcome_name", "Exposure_window_rec")) %>%
   left_join(Table_S11_c, by = c("Outcome_name", "Exposure_window_rec")) 
 rm(bdd_Table_S11, Table_S11_a, Table_S11_b, Table_S11_c)
+
+write_xlsx(Table_S11, "4_output/review/Table_S11.xlsx")
   
 
 ## Table S12 : sensitivity - specific gravity ----
@@ -1086,7 +1025,7 @@ Table_S12 <- Table_S12 %>%
     Outcome_name = factor(Outcome_name, levels = c("Specific richness", "Shannon diversity", 
                                     "Firmicutes", "Actinobacteria", 
                                     "Bacteroidetes", "Proteobacteria",
-                                    genera_vec)), 
+                                    genera_names)), 
     conf.low = format(round(conf.low, 1), digits = 1),
     conf.high = format(round(conf.high, 1), digits = 1),
     conf.low_sg = format(round(conf.low_sg, 1), digits = 1),
@@ -1110,7 +1049,7 @@ rm(phthalates_sensi_sg,
    phthalates_sensi_sg_pre, 
    phthalates_sensi_sg_post)
 
-writexl::write_xlsx(Table_S12, "4_output/review/Table_S12.xlsx")
+write_xlsx(Table_S12, "4_output/review/Table_S12.xlsx")
 
 Table_S12 %>% filter(p.value <0.1 & p.value_sg <0.1) %>% View()
 Table_S12 %>% filter(p.value <0.05 & p.value_sg <0.05) %>% View()
@@ -1153,7 +1092,6 @@ Table_S13 <- do.call(rbind, lapply(Table_S13, function(outcome_list) {          
 }))
 
 rm(i, j, k, outcome_results, regression_result, outcome, exposure)
-
 
 Table_S13 <- Table_S13 %>%                                        # Réorganisation tableau brut des resultats (pour figures)                   
   mutate(
@@ -1198,7 +1136,7 @@ Table_S13 <- Table_S13 %>%
     Outcome_name = factor(Outcome_name, levels = c("Specific richness", "Shannon diversity", 
                                                    "Firmicutes", "Actinobacteria", 
                                                    "Bacteroidetes", "Proteobacteria",
-                                                   genera_vec)), 
+                                                   genera_names)), 
     conf.low = format(round(conf.low, 1), digits = 1),
     conf.high = format(round(conf.high, 1), digits = 1),
     conf.low_hospit = format(round(conf.low_hospit, 1), digits = 1),
@@ -1222,7 +1160,7 @@ Table_S13 <- Table_S13 %>%
 rm(covariates_pre_sensi_13, 
    covariates_post_sensi_13)
 
-writexl::write_xlsx(Table_S13, "4_output/review/Table_S13.xlsx")
+write_xlsx(Table_S13, "4_output/review/Table_S13.xlsx")
 
 
 ## Table S14 : sensitivity - gestational age, weight and length at birth and one year ----
@@ -1306,7 +1244,7 @@ Table_S14 <- Table_S14 %>%
     Outcome_name = factor(Outcome_name, levels = c("Specific richness", "Shannon diversity", 
                                                    "Firmicutes", "Actinobacteria", 
                                                    "Bacteroidetes", "Proteobacteria",
-                                                   genera_vec)), 
+                                                   genera_names)), 
     conf.low = format(round(conf.low, 1), digits = 1),
     conf.high = format(round(conf.high, 1), digits = 1),
     conf.low_w_he = format(round(conf.low_w_he, 1), digits = 1),
@@ -1331,7 +1269,7 @@ Table_S14 <- Table_S14 %>%
 rm(covariates_pre_sensi_14, 
    covariates_post_sensi_14)
 
-writexl::write_xlsx(Table_S14, "4_output/review/Table_S14.xlsx")
+write_xlsx(Table_S14, "4_output/review/Table_S14.xlsx")
 
 
 ## Figure S1 (dag) ----
@@ -1511,10 +1449,42 @@ corrplot(Figure_S4,
 dev.off()
 
 ## Figure S5 (alpha - multivar) ----
+# cf code 7.1_revision_1_EP_multipol.R
 
 ## Figure S6 (phyla - multivar) ----
-
+# cf code 7.1_revision_1_EP_multipol.R
 
 
 # Exporter les résultats ----
-save.image("4_output/results_review.RData")
+rm(asv_raw_not_rarefied, 
+   barplot, 
+   boxplot, 
+   comp_effectifs, 
+   create_filtered_tbl_merge, 
+   create_tbl_for_range, 
+   custom_pvalue_fun, 
+   densityplot, 
+   descrip_num, 
+   extract_exposure_results, 
+   filter_exposure_tbl, 
+   format_p_value, 
+   generate_tbl, 
+   heatmap_cor, 
+   heatmap_cor_pairwise, 
+   histogram, 
+   main_model, 
+   outliers, 
+   process_outcome, 
+   process_outcome_results, 
+   scatterplot, 
+   sensi_10, 
+   sensi_11, 
+   sensi_12, 
+   sensi_13, 
+   sensi_14, 
+   table_cor, 
+   table_cor_sg,
+   test_sensi_sg, 
+   verif_distrib)                        
+save.image("4_output/results_review_unipol.RData")
+

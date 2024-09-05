@@ -12,9 +12,6 @@ library(writexl)
 
 # Chargement des données ----
 load("1_intermediate_data/2_data_selection_AD_gumme.RData")
-asv_raw_not_rarefied <-              # pour les analyses betadiv
-  read_labelled_csv(
-    "0_source_data/gut_microbiota_ASVbased_Y1_labelled_AD_20220504_7239.csv") 
 
 # Chargement des fonctions ----
 bkmr_t2_alpha <- function(outcome) {
@@ -574,6 +571,9 @@ Table_S9 <- list(
     results_bkmr$taxa_Y1$Proteobacteria)) %>%
   bind_rows()
 
+write_xlsx(Table_S6, "4_output/review/Table_S6.xlsx")
+write_xlsx(Table_S9, "4_output/review/Table_S9.xlsx")
+
 # Overall ----
 # results_bkmr_overall_phthalates_rich_t2 <- 
 # results_bkmr_overall_phthalates_sha_t2 <- 
@@ -864,9 +864,27 @@ ggsave("4_output/bkmr/Run3 (ms)/plot_risks.singvar_phthalates_run3ms.tiff",
        width = 180,
        height = 250)
 
-rm(bkmr_t2_alpha, bkmr_t3_alpha, bkmr_Y1_alpha, TracePlot_group_alpha, pip_results_alpha, risks_overall, risks_singvar,
-   plot_risks.overall_shannon, plot_risks.overall_sperich, plot_risks.singvar_shannon, plot_risks.singvar_sperich, 
-   bdd_outcomes_alpha_bkmr, covariates_alpha_t2, covariates_alpha_t3, covariates_alpha_Y1, 
+rm(bkmr_t2_alpha, bkmr_t3_alpha, bkmr_Y1_alpha, 
+   bkmr_t2_phyla, bkmr_t3_phyla, bkmr_Y1_phyla, 
+   TracePlot_group_alpha, TracePlot_group_phyla, 
+   pip_results_alpha, pip_results_phyla, 
+   risks_overall, risks_singvar,
+   plot_risks.overall_sperich, plot_risks.overall_shannon, 
+   plot_risks.singvar_shannon, plot_risks.singvar_sperich, 
+   bdd_outcomes_alpha_bkmr, bdd_outcomes_phyla_bkmr,
+   covariates_alpha_t2, covariates_alpha_t3, covariates_alpha_Y1, 
+   covariates_taxa_t2, covariates_taxa_t3, covariates_taxa_Y1, 
    mixture_alpha_t2, mixture_alpha_t3, mixture_alpha_Y1, 
-   outcome_shannon_t2, outcome_shannon_t3, outcome_shannon_Y1, outcome_specrich_t2, outcome_specrich_t3, outcome_specrich_Y1, 
-   ncores, nom)
+   mixture_taxa_t2, mixture_taxa_t3, mixture_taxa_Y1, 
+   outcome_shannon_t2, outcome_shannon_t3, outcome_shannon_Y1, 
+   outcome_specrich_t2, outcome_specrich_t3, outcome_specrich_Y1, 
+   outcome_p1_t2, outcome_p1_t3, outcome_p1_Y1, 
+   outcome_p2_t2, outcome_p2_t3, outcome_p2_Y1, 
+   outcome_p3_t2, outcome_p3_t3, outcome_p3_Y1, 
+   outcome_p4_t2, outcome_p4_t3, outcome_p4_Y1, 
+   bdd_bkmr_alpha_t2, bdd_bkmr_alpha_t3, bdd_bkmr_alpha_Y1, 
+   bdd_bkmr_taxa_t2, bdd_bkmr_taxa_t3, bdd_bkmr_taxa_Y1, 
+   bdd_covariates_pre_bkmr, bdd_covariates_post_bkmr, 
+   bdd_expo_t2_bkmr, bdd_expo_t3_bkmr, bdd_expo_Y1_bkmr, 
+   covariates_pre_bkmr, covariates_post_bkmr, 
+   ncores)
