@@ -495,20 +495,8 @@ names(results_bkmr$taxa_t3) <- c("Firmicutes", "Actinobacteria", "Bacteroidetes"
 names(results_bkmr$taxa_Y1) <- c("Firmicutes", "Actinobacteria", "Bacteroidetes", "Proteobacteria") 
 
 
-# extraire les résultats
-# results_bkmr_phthalates_alpha_t2 <- list[[1]]
-# results_bkmr_phthalates_alpha_t3 <- list[[2]]
-# results_bkmr_phthalates_alpha_Y1 <- list[[4]]
-# 
-# results_bkmr_phthalates_rich_t2 <- results_bkmr_phthalates_alpha_t2[[1]]
-# results_bkmr_phthalates_sha_t2 <- results_bkmr_phthalates_alpha_t2[[2]]
-# 
-# results_bkmr_phthalates_rich_t3 <- results_bkmr_phthalates_alpha_t3[[1]]
-# results_bkmr_phthalates_sha_t3 <- results_bkmr_phthalates_alpha_t3[[2]]
-# 
-# results_bkmr_phthalates_rich_Y1 <- results_bkmr_phthalates_alpha_Y1[[1]]
-# results_bkmr_phthalates_sha_Y1 <- results_bkmr_phthalates_alpha_Y1[[2]]
-
+# Récupérer les résultats ----
+load("4_output/review/results_review_multipol.RData")
 
 # model convergence ----
 TracePlot_group_alpha(results_bkmr$alpha_t2$`Specific richness`, 
@@ -617,6 +605,8 @@ results_bkmr_overall <-
       p3 = risks_overall(results_bkmr$taxa_Y1$Bacteroidetes, outcome_p3_Y1, mixture_taxa_Y1, covariates_taxa_Y1),
       p4 = risks_overall(results_bkmr$taxa_Y1$Proteobacteria, outcome_p4_Y1, mixture_taxa_Y1, covariates_taxa_Y1)))
 
+save.image("4_output/review/results_review_multipol.RData")
+
 overall_phthalates_phyla <- bind_rows(
   list_t2 = do.call(rbind, results_bkmr_overall$T2) %>% 
     as.data.frame() %>% 
@@ -687,6 +677,8 @@ results_bkmr_singvar <-
       p3 = risks_singvar(results_bkmr$taxa_Y1$Bacteroidetes, outcome_p3_Y1, mixture_taxa_Y1, covariates_taxa_Y1),
       p4 = risks_singvar(results_bkmr$taxa_Y1$Proteobacteria, outcome_p4_Y1, mixture_taxa_Y1, covariates_taxa_Y1)))
 
+save.image("4_output/review/results_review_multipol.RData")
+
 valeurs <- c("rich", "shan", "p1", "p2", "p3", "p4")
 for (i in 1:6) {
   results_bkmr_singvar$T2[[i]] <- results_bkmr_singvar$T2[[i]] %>% mutate(taxa = valeurs[i])}
@@ -694,7 +686,7 @@ for (i in 1:6) {
   results_bkmr_singvar$T3[[i]] <- results_bkmr_singvar$T3[[i]] %>% mutate(taxa = valeurs[i])}
 for (i in 1:6) {
   results_bkmr_singvar$Y1[[i]] <- results_bkmr_singvar$Y1[[i]] %>% mutate(taxa = valeurs[i])}
-rm(valeurs)
+rm(valeurs, i)
 
 singvar_phthalates_phyla <- bind_rows(
   list_t2 = do.call(rbind, results_bkmr_singvar$T2) %>% 
