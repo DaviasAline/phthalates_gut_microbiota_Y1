@@ -12,34 +12,6 @@ library(writexl)
 library(patchwork)
 library(ggtext)
 
-
-library(tidyverse)
-library(haven)
-library(reshape2)
-library(GGally)
-library(gtsummary)
-library(summarytools)
-library(patchwork)
-library(ggpubr)
-library(grid)
-library(questionr)
-library(Hmisc)
-library(rmarkdown)
-library(knitr)
-library(labelled)
-library(distill)
-library(rmdformats)
-library(parameters)
-library(RColorBrewer)
-library(dplyr)
-library(ggplot2)
-library(rstatix)
-library(grDevices)
-library(lazyeval)
-library(mice)
-library(car)
-library(expss)
-
 # Chargement des données ----
 load("1_intermediate_data/2_data_selection_AD_gumme.RData")
 
@@ -588,7 +560,6 @@ results_bkmr_overall <-
       p3 = risks_overall(results_bkmr$taxa_Y1$Bacteroidetes, outcome_p3_Y1, mixture_taxa_Y1, covariates_taxa_Y1),
       p4 = risks_overall(results_bkmr$taxa_Y1$Proteobacteria, outcome_p4_Y1, mixture_taxa_Y1, covariates_taxa_Y1)))
 
-save.image("4_output/review/results_review_multipol.RData")
 
 table_bkmr_overall <- bind_rows(
   list_t2 = do.call(rbind, results_bkmr_overall$T2) %>% 
@@ -609,7 +580,7 @@ table_bkmr_overall <- bind_rows(
   select(window, everything())
 
 ## Figure 2 ----
-plot_risks.overall_alpha <- 
+Figure_2 <- 
   plot_risks.overall(results_bkmr_overall$T2$rich, title = "Specific richness", y_title = bquote("2"^{nd}~trim.~exposure), x_title = "") +
   plot_risks.overall(results_bkmr_overall$T2$shan, title = "Shannon diversity", y_title = "", x_title = "") + 
   
@@ -622,7 +593,7 @@ plot_risks.overall_alpha <-
   plot_layout(ncol = 2, nrow = 3) 
 
 ggsave("4_output/review/Figure_2.tiff", 
-       plot_risks.overall_alpha, 
+       Figure_2, 
        device = "tiff",
        units = "mm",
        dpi = 300, 
@@ -630,7 +601,7 @@ ggsave("4_output/review/Figure_2.tiff",
        height = 187)
 
 ## Figure 3 ----
-plot_risks.overall_taxa <- 
+Figure_3 <- 
   plot_risks.overall(results_bkmr_overall$T2$p1, title = "Phylum Firmicutes", y_title = bquote("2"^{nd}~trim.~exposure), x_title = "") +
   plot_risks.overall(results_bkmr_overall$T2$p2, title = "Phylum Actinobacteria", y_title = "", x_title = "") + 
   plot_risks.overall(results_bkmr_overall$T2$p3, title = "Phylum Bacteroidetes", y_title = "", x_title = "") + 
@@ -649,7 +620,7 @@ plot_risks.overall_taxa <-
   plot_layout(ncol = 4, nrow = 3) 
 
 ggsave("4_output/review/Figure_3.tiff", 
-       plot_risks.overall_taxa, 
+       Figure_3, 
        device = "tiff",
        units = "mm",
        dpi = 300, 
@@ -725,7 +696,7 @@ table_bkmr_singvar <- bind_rows(
                             "ΣDEHP Y1", "ΣDEHP t3", "ΣDEHP t2"))
 
 ## Figure S6 ----
-plot_risks.singvar_alpha <- 
+Figure_S6 <- 
   plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "rich", 
                      title = "Specific richness", x_title = bquote("2"^{nd}~trim.~exposure), y_title = "", 
                      legend.position = "none", axis.y = element_text(size = 12)) +
@@ -750,7 +721,7 @@ plot_risks.singvar_alpha <-
   plot_layout(ncol = 2, nrow = 3) 
 
 ggsave("4_output/review/Figure_S6.tiff", 
-       plot_risks.singvar_alpha, 
+       Figure_S6, 
        device = "tiff",
        units = "mm",
        dpi = 300, 
@@ -759,7 +730,7 @@ ggsave("4_output/review/Figure_S6.tiff",
 
 
 ## Figure S7 ----
-plot_risks.singvar_taxa <- 
+Figure_S7 <- 
   plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "p1", 
                      title = "Phylum Firmicutes", x_title = bquote("2"^{nd}~trim.~exposure), y_title = "", 
                      legend.position = "none", axis.y = element_text(size = 12)) +
@@ -802,7 +773,7 @@ plot_risks.singvar_taxa <-
   plot_layout(ncol = 4, nrow = 3) 
 
 ggsave("4_output/review/Figure_S7.tiff", 
-       plot_risks.singvar_taxa, 
+       Figure_S7, 
        device = "tiff",
        units = "mm",
        dpi = 300, 
@@ -816,8 +787,6 @@ rm(bkmr_t2_alpha, bkmr_t3_alpha, bkmr_Y1_alpha,
    TracePlot_group_alpha, TracePlot_group_phyla, 
    pip_results_alpha, pip_results_phyla, 
    risks_overall, risks_singvar,
-   plot_risks.overall_sperich, plot_risks.overall_shannon, 
-   plot_risks.singvar_shannon, plot_risks.singvar_sperich, 
    bdd_outcomes_alpha_bkmr, bdd_outcomes_phyla_bkmr,
    covariates_alpha_t2, covariates_alpha_t3, covariates_alpha_Y1, 
    covariates_taxa_t2, covariates_taxa_t3, covariates_taxa_Y1, 
@@ -834,8 +803,11 @@ rm(bkmr_t2_alpha, bkmr_t3_alpha, bkmr_Y1_alpha,
    bdd_covariates_pre_bkmr, bdd_covariates_post_bkmr, 
    bdd_expo_t2_bkmr, bdd_expo_t3_bkmr, bdd_expo_Y1_bkmr, 
    covariates_pre_bkmr, covariates_post_bkmr, 
-   ncores)
+   plot_risks.overall, plot_risks.singvar)
 
+
+# Enregistrer les résultats ----
+save.image("4_output/review/results_review_multipol.RData")
 
 # Récupérer les résultats ----
 load("4_output/review/results_review_multipol.RData")
