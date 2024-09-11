@@ -9,6 +9,36 @@ library(fields)
 library(future)
 library(future.apply)
 library(writexl)
+library(patchwork)
+library(ggtext)
+
+
+library(tidyverse)
+library(haven)
+library(reshape2)
+library(GGally)
+library(gtsummary)
+library(summarytools)
+library(patchwork)
+library(ggpubr)
+library(grid)
+library(questionr)
+library(Hmisc)
+library(rmarkdown)
+library(knitr)
+library(labelled)
+library(distill)
+library(rmdformats)
+library(parameters)
+library(RColorBrewer)
+library(dplyr)
+library(ggplot2)
+library(rstatix)
+library(grDevices)
+library(lazyeval)
+library(mice)
+library(car)
+library(expss)
 
 # Chargement des données ----
 load("1_intermediate_data/2_data_selection_AD_gumme.RData")
@@ -170,79 +200,52 @@ risks_singvar <- function(fit, y, Z, covariates) {
   return(results)
 }
 
-plot_risks.overall_sperich <- function(risks.overall, est, sd, title){
+plot_risks.overall <- function(risks.overall, title, y_title, x_title){
   ggplot(risks.overall,
          aes(
            quantile,
-           {{est}},
-           ymin = {{est}} - 1.96 * {{sd}},
-           ymax = {{est}} + 1.96 * {{sd}}
+           est,
+           ymin = est - 1.96 * sd,
+           ymax = est + 1.96 * sd
          )) +
     geom_pointrange() +
-    labs(y = "Specific richness") + 
+    ylab(y_title) +           
+    xlab(x_title) +
     geom_hline(yintercept = 0, linetype = "dashed", color = "red")+
     theme_bw() +
-    theme(plot.title = element_text(size = 12))+ 
-    ggtitle(title)
+    theme(plot.title = element_markdown(size = 12, hjust = 0.5))+ 
+    ggtitle(title) 
+  
 }
 
-plot_risks.overall_shannon <-function(risks.overall, est, sd){   
-  ggplot(risks.overall,
-         aes(
-           quantile,
-           {{est}},
-           ymin = {{est}} - 1.96 * {{sd}},
-           ymax = {{est}} + 1.96 * {{sd}}
-         )) +
-    geom_pointrange() + 
-    labs(y = "Shannon diversity") +
-    geom_hline(yintercept = 0, linetype = "dashed", color = "red")+
-    theme_bw() }
-
-
-plot_risks.singvar_sperich <- function(risks.singvar, plot_title, window) {
+plot_risks.singvar <- function(risks.singvar, window, taxa, 
+                               title, y_title, x_title, 
+                               legend.position, axis.y) {
   
-  plot_risks.singvar_sperich <- risks.singvar %>%
-    filter(grepl(window, variable)) %>%
+  risks.singvar %>%
+    mutate(
+      pollutant = sub("...$", "", pollutant)) %>%
+    filter({{window}} == window) %>%
+    filter({{taxa}} == taxa) %>%
     ggplot(
       aes(
-        variable,
-        est_rich,
-        ymin = est_rich - 1.96 * sd_rich,
-        ymax = est_rich + 1.96 * sd_rich,
+        pollutant,
+        est,
+        ymin = est - 1.96 * sd,
+        ymax = est + 1.96 * sd,
         col = q.fixed)
     ) +
     geom_pointrange(position = position_dodge(width = 0.75), 
                     size = 0.15) +
     geom_hline(yintercept = 0, linetype="dashed") +
-    labs(y = "Specific richness", 
-         x ="Exposure") + 
+    labs(y = y_title, 
+         x =x_title) + 
     coord_flip()+
     theme_bw() +
-    theme(legend.position = "none", 
-          plot.title = element_text(size = 12))+ 
-    ggtitle(plot_title)}
-
-plot_risks.singvar_shannon <- function(risks.singvar, window) {
-  plot_risks.singvar_shannon <- risks.singvar %>%
-    filter(grepl(window, variable)) %>%
-    ggplot(
-      aes(
-        variable,
-        est_sha,
-        ymin = est_sha - 1.96 * sd_sha,
-        ymax = est_sha + 1.96 * sd_sha,
-        col = q.fixed)
-    ) +
-    geom_pointrange(position = position_dodge(width = 0.75), 
-                    size = 0.15) +
-    geom_hline(yintercept = 0, linetype="dashed") + 
-    labs(y = "Shannon diversity", 
-         x ="Exposure")+
-    coord_flip() +
-    theme_bw() +
-    theme(axis.text.y = element_blank(), axis.title.y = element_blank())+
-    theme(legend.position = "none")}
+    theme(legend.position = legend.position, 
+          plot.title = element_markdown(size = 12, hjust = 0.5), 
+          axis.text.y = axis.y)+ 
+    ggtitle(title)}
 
 # Nettoyage des données ----
 ## variables outcomes ----
@@ -494,11 +497,7 @@ names(results_bkmr$taxa_t2) <- c("Firmicutes", "Actinobacteria", "Bacteroidetes"
 names(results_bkmr$taxa_t3) <- c("Firmicutes", "Actinobacteria", "Bacteroidetes", "Proteobacteria") 
 names(results_bkmr$taxa_Y1) <- c("Firmicutes", "Actinobacteria", "Bacteroidetes", "Proteobacteria") 
 
-
-# Récupérer les résultats ----
-load("4_output/review/results_review_multipol.RData")
-
-# model convergence ----
+# Model convergence ----
 TracePlot_group_alpha(results_bkmr$alpha_t2$`Specific richness`, 
                       results_bkmr$alpha_t2$`Shannon diversity`, 
                 titre = "Model convergence Phthalates BKMR t2, Specific richness, Shannon (de haut en bas)")
@@ -529,6 +528,7 @@ par(mfrow=c(1,1))
 
 
 # PIP ----
+## Table S6 ----
 Table_S6 <- list(
   T2 = pip_results_alpha(
     results_bkmr$alpha_t2$`Specific richness`, 
@@ -541,6 +541,7 @@ Table_S6 <- list(
     results_bkmr$alpha_Y1$`Shannon diversity`)) %>% 
   bind_rows()
 
+## Table_S9 ----
 Table_S9 <- list(
   T2 = pip_results_phyla(
     results_bkmr$taxa_t2$Firmicutes,
@@ -563,24 +564,6 @@ write_xlsx(Table_S6, "4_output/review/Table_S6.xlsx")
 write_xlsx(Table_S9, "4_output/review/Table_S9.xlsx")
 
 # Overall ----
-# results_bkmr_overall_phthalates_rich_t2 <- 
-# results_bkmr_overall_phthalates_sha_t2 <- 
-# 
-# results_bkmr_overall_phthalates_rich_t3 <- 
-# 
-# results_bkmr_overall_phthalates_rich_Y1 <- 
-# 
-# list_overall <- list(results_bkmr_overall_phthalates_rich_t2 = results_bkmr_overall_phthalates_rich_t2, 
-#                      results_bkmr_overall_phthalates_sha_t2 = results_bkmr_overall_phthalates_sha_t2, 
-#                      results_bkmr_overall_phthalates_rich_t3 = results_bkmr_overall_phthalates_rich_t3, 
-#                      results_bkmr_overall_phthalates_sha_t3 = results_bkmr_overall_phthalates_sha_t3, 
-#                      results_bkmr_overall_phthalates_rich_Y1 = results_bkmr_overall_phthalates_rich_Y1, 
-#                      results_bkmr_overall_phthalates_sha_Y1 =results_bkmr_overall_phthalates_sha_Y1)
-# save(list_overall, 
-#      file = "4_output/bkmr/Run3 (ms)/resuts_bkmr_overall_phthalates_alpha_run3ms.RData")
-# load("4_output/bkmr/Run3 (ms)/resuts_bkmr_overall_phthalates_alpha_run3ms.RData")
-# list2env(list_overall, envir = .GlobalEnv)
-
 results_bkmr_overall <- 
   list(
     T2 = list(
@@ -607,7 +590,7 @@ results_bkmr_overall <-
 
 save.image("4_output/review/results_review_multipol.RData")
 
-overall_phthalates_phyla <- bind_rows(
+table_bkmr_overall <- bind_rows(
   list_t2 = do.call(rbind, results_bkmr_overall$T2) %>% 
     as.data.frame() %>% 
     rownames_to_column("outcome") %>%
@@ -625,34 +608,56 @@ overall_phthalates_phyla <- bind_rows(
            window = "Y1")) %>%
   select(window, everything())
 
+## Figure 2 ----
+plot_risks.overall_alpha <- 
+  plot_risks.overall(results_bkmr_overall$T2$rich, title = "Specific richness", y_title = bquote("2"^{nd}~trim.~exposure), x_title = "") +
+  plot_risks.overall(results_bkmr_overall$T2$shan, title = "Shannon diversity", y_title = "", x_title = "") + 
+  
+  plot_risks.overall(results_bkmr_overall$T3$rich, title = "", y_title = bquote("3"^{rd}~trim.~exposure), x_title = "") +
+  plot_risks.overall(results_bkmr_overall$T3$shan, title = "", y_title = "", x_title = "") + 
+  
+  plot_risks.overall(results_bkmr_overall$Y1$rich, title = "", y_title = "12-month exposure", x_title = "quantile") +
+  plot_risks.overall(results_bkmr_overall$Y1$sha, title = "", y_title = "", x_title = "quantile") + 
+  
+  plot_layout(ncol = 2, nrow = 3) 
+
+ggsave("4_output/review/Figure_2.tiff", 
+       plot_risks.overall_alpha, 
+       device = "tiff",
+       units = "mm",
+       dpi = 300, 
+       width = 180,
+       height = 187)
+
+## Figure 3 ----
+plot_risks.overall_taxa <- 
+  plot_risks.overall(results_bkmr_overall$T2$p1, title = "Phylum Firmicutes", y_title = bquote("2"^{nd}~trim.~exposure), x_title = "") +
+  plot_risks.overall(results_bkmr_overall$T2$p2, title = "Phylum Actinobacteria", y_title = "", x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T2$p3, title = "Phylum Bacteroidetes", y_title = "", x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T2$p4, title = "Phylum Proteobacteria", y_title = "", x_title = "") + 
+  
+  plot_risks.overall(results_bkmr_overall$T3$p1, title = "", y_title = bquote("3"^{rd}~trim.~exposure), x_title = "") +
+  plot_risks.overall(results_bkmr_overall$T3$p2, title = "", y_title = "", x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T3$p3, title = "", y_title = "", x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T3$p4, title = "", y_title = "", x_title = "") + 
+  
+  plot_risks.overall(results_bkmr_overall$Y1$p1, title = "", y_title = "12-month exposure", x_title = "quantile") +
+  plot_risks.overall(results_bkmr_overall$Y1$p2, title = "", y_title = "", x_title = "quantile") + 
+  plot_risks.overall(results_bkmr_overall$Y1$p3, title = "", y_title = "", x_title = "quantile") + 
+  plot_risks.overall(results_bkmr_overall$Y1$p4, title = "", y_title = "", x_title = "quantile") +   
+  
+  plot_layout(ncol = 4, nrow = 3) 
+
+ggsave("4_output/review/Figure_3.tiff", 
+       plot_risks.overall_taxa, 
+       device = "tiff",
+       units = "mm",
+       dpi = 300, 
+       width = 300,
+       height = 187)
+
+
 # Singvar ----
-results_bkmr_singvar_phthalates_rich_t2 <- 
-
-results_bkmr_singvar_phthalates_rich_t3 <- 
-
-results_bkmr_singvar_phthalates_rich_Y1 <- 
-
-list_singvar <- list(results_bkmr_singvar_phthalates_rich_t2, results_bkmr_singvar_phthalates_sha_t2, results_bkmr_singvar_phthalates_fai_t2,
-                     results_bkmr_singvar_phthalates_rich_t3, results_bkmr_singvar_phthalates_sha_t3, results_bkmr_singvar_phthalates_fai_t3)
-save(list_singvar,
-     file = "4_output/phthalates/bkmr_phthalates/Run3 (ms)/resuts_bkmr_singvar_phthalates_alpha_run3ms.RData")
-
-load("4_output/bkmr/Run3 (ms)/resuts_bkmr_singvar_phthalates_alpha_run3ms.RData")
-names(list_singvar) <- c("results_bkmr_singvar_phthalates_rich_t2", 
-                         "results_bkmr_singvar_phthalates_sha_t2", 
-                         "results_bkmr_singvar_phthalates_fai_t2", 
-                         "results_bkmr_singvar_phthalates_rich_t3", 
-                         "results_bkmr_singvar_phthalates_sha_t3", 
-                         "results_bkmr_singvar_phthalates_fai_t3",  
-                         "results_bkmr_singvar_phthalates_rich_M2", 
-                         "results_bkmr_singvar_phthalates_sha_M2", 
-                         "results_bkmr_singvar_phthalates_fai_M2",
-                         "results_bkmr_singvar_phthalates_rich_Y1", 
-                         "results_bkmr_singvar_phthalates_sha_Y1", 
-                         "results_bkmr_singvar_phthalates_fai_Y1")
-list2env(list_singvar, envir = .GlobalEnv)
-
-
 results_bkmr_singvar <- 
   list(
     T2 = list(
@@ -677,8 +682,6 @@ results_bkmr_singvar <-
       p3 = risks_singvar(results_bkmr$taxa_Y1$Bacteroidetes, outcome_p3_Y1, mixture_taxa_Y1, covariates_taxa_Y1),
       p4 = risks_singvar(results_bkmr$taxa_Y1$Proteobacteria, outcome_p4_Y1, mixture_taxa_Y1, covariates_taxa_Y1)))
 
-save.image("4_output/review/results_review_multipol.RData")
-
 valeurs <- c("rich", "shan", "p1", "p2", "p3", "p4")
 for (i in 1:6) {
   results_bkmr_singvar$T2[[i]] <- results_bkmr_singvar$T2[[i]] %>% mutate(taxa = valeurs[i])}
@@ -688,7 +691,7 @@ for (i in 1:6) {
   results_bkmr_singvar$Y1[[i]] <- results_bkmr_singvar$Y1[[i]] %>% mutate(taxa = valeurs[i])}
 rm(valeurs, i)
 
-singvar_phthalates_phyla <- bind_rows(
+table_bkmr_singvar <- bind_rows(
   list_t2 = do.call(rbind, results_bkmr_singvar$T2) %>% 
     as.data.frame() %>% 
     mutate(window = "T2"), 
@@ -721,140 +724,92 @@ singvar_phthalates_phyla <- bind_rows(
                             "ΣDiNP Y1", "ΣDiNP t3", "ΣDiNP t2", 
                             "ΣDEHP Y1", "ΣDEHP t3", "ΣDEHP t2"))
 
-# Sauvegarde ----
-## Overall results ----
-### Run 3 ----
-results_bkmr_overall_phthalates_rich_t2 <- results_bkmr_overall_phthalates_rich_t2 %>% rename(est_rich_t2 = est, sd_rich_t2 = sd)
-results_bkmr_overall_phthalates_sha_t2 <- results_bkmr_overall_phthalates_sha_t2 %>% rename(est_sha_t2 = est, sd_sha_t2 = sd)
-
-results_bkmr_overall_phthalates_rich_t3 <- results_bkmr_overall_phthalates_rich_t3 %>% rename(est_rich_t3 = est, sd_rich_t3 = sd)
-results_bkmr_overall_phthalates_sha_t3 <- results_bkmr_overall_phthalates_sha_t3 %>% rename(est_sha_t3 = est, sd_sha_t3 = sd)
-
-results_bkmr_overall_phthalates_rich_Y1 <- results_bkmr_overall_phthalates_rich_Y1 %>% rename(est_rich_Y1 = est, sd_rich_Y1 = sd)
-results_bkmr_overall_phthalates_sha_Y1 <- results_bkmr_overall_phthalates_sha_Y1 %>% rename(est_sha_Y1 = est, sd_sha_Y1 = sd)
-
-
-results_bkmr_overall_phthalates_alpha <- 
-  results_bkmr_overall_phthalates_rich_t2 %>%
-  left_join(results_bkmr_overall_phthalates_sha_t2, by = "quantile") %>%
+## Figure S6 ----
+plot_risks.singvar_alpha <- 
+  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "rich", 
+                     title = "Specific richness", x_title = bquote("2"^{nd}~trim.~exposure), y_title = "", 
+                     legend.position = "none", axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "shan",  
+                     title = "Shannon diversity", x_title = "", y_title = "", 
+                     legend.position = "none", axis.y = element_blank()) + 
   
-  left_join(results_bkmr_overall_phthalates_rich_t3, by =  "quantile") %>%
-  left_join(results_bkmr_overall_phthalates_sha_t3, by =  "quantile") %>%
+  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "rich", 
+                     title = "", x_title = bquote("3"^{rd}~trim.~exposure), y_title = "", 
+                     legend.position = "none", axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "shan",
+                     title = "", x_title = "", y_title = "", 
+                     legend.position = "none", axis.y = element_blank()) + 
   
-  left_join(results_bkmr_overall_phthalates_rich_Y1, by =  "quantile") %>%
-  left_join(results_bkmr_overall_phthalates_sha_Y1, by =  "quantile") 
-
-
-## Singvar results ----
-results_bkmr_singvar_phthalates_rich_t2 <- results_bkmr_singvar_phthalates_rich_t2 %>% rename(est_rich = est, sd_rich = sd)
-results_bkmr_singvar_phthalates_sha_t2 <- results_bkmr_singvar_phthalates_sha_t2 %>% rename(est_sha = est, sd_sha = sd)
-
-results_bkmr_singvar_phthalates_rich_t3 <- results_bkmr_singvar_phthalates_rich_t3 %>% rename(est_rich = est, sd_rich = sd)
-results_bkmr_singvar_phthalates_sha_t3 <- results_bkmr_singvar_phthalates_sha_t3 %>% rename(est_sha = est, sd_sha = sd)
-
-results_bkmr_singvar_phthalates_rich_Y1 <- results_bkmr_singvar_phthalates_rich_Y1 %>% rename(est_rich = est, sd_rich = sd)
-results_bkmr_singvar_phthalates_sha_Y1 <- results_bkmr_singvar_phthalates_sha_Y1 %>% rename(est_sha = est, sd_sha = sd)
-
-results_bkmr_singvar_phthalates_alpha_t2 <- 
-  results_bkmr_singvar_phthalates_rich_t2 %>%
-  left_join(results_bkmr_singvar_phthalates_sha_t2, by = c("q.fixed", "variable")) 
-
-results_bkmr_singvar_phthalates_alpha_t3 <- 
-  results_bkmr_singvar_phthalates_rich_t3 %>%
-  left_join(results_bkmr_singvar_phthalates_sha_t3, by = c("q.fixed", "variable"))
-
-results_bkmr_singvar_phthalates_alpha_Y1 <- 
-  results_bkmr_singvar_phthalates_rich_Y1 %>%
-  left_join(results_bkmr_singvar_phthalates_sha_Y1, by = c("q.fixed", "variable"))
-
-results_bkmr_singvar_phthalates_alpha <- 
-  results_bkmr_singvar_phthalates_alpha_t2 %>%
-  bind_rows(results_bkmr_singvar_phthalates_alpha_t3) %>%
-  bind_rows(results_bkmr_singvar_phthalates_alpha_Y1) %>%
-  mutate(
-    variable = str_replace_all(variable, 
-                               c("_i_cor_" = " ", 
-                                 "mo_" = "", 
-                                 "_ln" = "", 
-                                 "ch_" = "", 
-                                 "_ms" = "", 
-                                 "DEHP" = "ΣDEHP", 
-                                 "DiNP" = "ΣDiNP", 
-                                 "DINCH" = "ΣDINCH")), 
-    variable = fct_relevel(variable,
-                           "ΣDINCH Y1", "ΣDINCH t3", "ΣDINCH t2", "ohMPHP Y1", "ohMPHP t3",
-                           "ohMPHP t2", "MEP Y1", "MEP t3", "MEP t2", "MBzP Y1",
-                           "MBzP t3", "MBzP t2", "MiBP Y1", "MiBP t3",
-                           "MiBP t2", "MnBP Y1", "MnBP t3", "MnBP t2", "ΣDiNP Y1",
-                           "ΣDiNP t3", "ΣDiNP t2", "ΣDEHP Y1", "ΣDEHP t3",
-                           "ΣDEHP t2"))
-
-
-## Assemblage et export ----
-# results_bkmr_phthalates <- list(                           
-#   pip_phthalates_alpha_t2 = pip_phthalates_alpha_t2,
-#   pip_phthalates_alpha_t3 = pip_phthalates_alpha_t3,
-#   pip_phthalates_alpha_Y1 = pip_phthalates_alpha_Y1, 
-#   overall_phthalates_alpha = results_bkmr_overall_phthalates_alpha, 
-#   singvar_phthalates_alpha = results_bkmr_singvar_phthalates_alpha)
-# write_xlsx(results_bkmr_phthalates, path = "4_output/phthalates/bkmr_phthalates/Run3 (ms)/results_bkmr_phthalates_run3ms.xlsx")
-# 
-# results_bkmr_phthalates_run4 <- list(                           
-#   pip_phthalates_alpha_t2 = pip_phthalates_alpha_t2_run4,
-#   pip_phthalates_alpha_t3 = pip_phthalates_alpha_t3_run4,
-#   pip_phthalates_alpha_Y1 = pip_phthalates_alpha_Y1_run4, 
-#   overall_phthalates_alpha = results_bkmr_overall_phthalates_alpha_run4, 
-#   singvar_phthalates_alpha = results_bkmr_singvar_phthalates_alpha_run4)
-# write_xlsx(results_bkmr_phthalates_run4, path = "4_output/phthalates/bkmr_phthalates/Run4 (ms)/results_bkmr_phthalates_run4ms.xlsx")
-# 
-
-
-# Plots ----
-## overall ----
-dev.off()
-plot_risks.overall_phthalates_alpha_run3 <- 
-  plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha, est = est_rich_t2, sd = sd_rich_t2, title = bquote("2"^{nd}~trim.~exposure)) +
-  plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha, est = est_sha_t2, sd = sd_sha_t2) + 
-  
-  plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha, est = est_rich_t3, sd = sd_rich_t3, title = bquote("3"^{rd}~trim.~exposure)) + 
-  plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha, est = est_sha_t3, sd = sd_sha_t3) + 
-  
-  plot_risks.overall_sperich(results_bkmr_overall_phthalates_alpha, est = est_rich_Y1, sd = sd_rich_Y1, title = "12-month exposure") + 
-  plot_risks.overall_shannon(results_bkmr_overall_phthalates_alpha, est = est_sha_Y1, sd = sd_sha_Y1) + 
+  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "rich", 
+                     title = "", x_title = "12-month exposure", y_title = "", 
+                     legend.position = "none", axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "shan", 
+                     title = "", x_title = "", y_title = "", 
+                     legend.position = "none", axis.y = element_blank()) + 
   
   plot_layout(ncol = 2, nrow = 3) 
 
-
-ggsave("4_output/bkmr/Run3 (ms)/plot_risks.overall_phthalates_alpha_run3ms.tiff", 
-       plot_risks.overall_phthalates_alpha_run3, 
+ggsave("4_output/review/Figure_S6.tiff", 
+       plot_risks.singvar_alpha, 
        device = "tiff",
        units = "mm",
        dpi = 300, 
        width = 180,
-       height = 187)
+       height = 220)
 
 
-
-## Singvar ----
-plot_risks.singvar_phthalates <- 
-  plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t2", plot_title = bquote("2"^{nd}~trim.~exposure)) + 
-  plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t2") + 
+## Figure S7 ----
+plot_risks.singvar_taxa <- 
+  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "p1", 
+                     title = "Phylum Firmicutes", x_title = bquote("2"^{nd}~trim.~exposure), y_title = "", 
+                     legend.position = "none", axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "p2",  
+                     title = "Phylum Actinobacteria", x_title = "", y_title = "", 
+                     legend.position = "none", axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "p3",  
+                     title = "Phylum Bacteroidetes", x_title = "", y_title = "", 
+                     legend.position = "none", axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "p4",  
+                     title = "Phylum Proteobacteria", x_title = "", y_title = "", 
+                     legend.position = "right", axis.y = element_blank()) + 
   
-  plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t3", plot_title = bquote("3"^{rd}~trim.~exposure)) + 
-  plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "t3") + 
+  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "p1", 
+                     title = "", x_title = bquote("3"^{rd}~trim.~exposure), y_title = "", 
+                     legend.position = "none", axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "p2",
+                     title = "", x_title = "", y_title = "", 
+                     legend.position = "none", axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "p3", 
+                     title = "", x_title = "", y_title = "", 
+                     legend.position = "none", axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "p4", 
+                     title = "", x_title = "", y_title = "", 
+                     legend.position = "right", axis.y = element_blank()) + 
   
-  plot_risks.singvar_sperich(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "Y1", plot_title = "12-month exposure") + 
-  plot_risks.singvar_shannon(risks.singvar = results_bkmr_singvar_phthalates_alpha, window = "Y1") + 
-  plot_layout(ncol = 2, nrow = 3) 
+  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "p1", 
+                     title = "", x_title = "12-month exposure", y_title = "Relative abundance (%)", 
+                     legend.position = "none", axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "p2", 
+                     title = "", x_title = "", y_title = "Relative abundance (%)", 
+                     legend.position = "none", axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "p3", 
+                     title = "", x_title = "", y_title = "Relative abundance (%)", 
+                     legend.position = "none", axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "p4", 
+                     title = "", x_title = "", y_title = "Relative abundance (%)", 
+                     legend.position = "right", axis.y = element_blank()) +   
+  
+  plot_layout(ncol = 4, nrow = 3) 
 
-
-ggsave("4_output/bkmr/Run3 (ms)/plot_risks.singvar_phthalates_run3ms.tiff", 
-       plot_risks.singvar_phthalates, 
+ggsave("4_output/review/Figure_S7.tiff", 
+       plot_risks.singvar_taxa, 
        device = "tiff",
        units = "mm",
        dpi = 300, 
-       width = 180,
-       height = 250)
+       width = 300,
+       height = 220)
+
+
 
 rm(bkmr_t2_alpha, bkmr_t3_alpha, bkmr_Y1_alpha, 
    bkmr_t2_phyla, bkmr_t3_phyla, bkmr_Y1_phyla, 
@@ -880,3 +835,7 @@ rm(bkmr_t2_alpha, bkmr_t3_alpha, bkmr_Y1_alpha,
    bdd_expo_t2_bkmr, bdd_expo_t3_bkmr, bdd_expo_Y1_bkmr, 
    covariates_pre_bkmr, covariates_post_bkmr, 
    ncores)
+
+
+# Récupérer les résultats ----
+load("4_output/review/results_review_multipol.RData")
