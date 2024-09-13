@@ -112,6 +112,7 @@ phyla_vec <- c("ch_feces_rel_p1_Y1", "ch_feces_rel_p2_Y1",
 genera_vec <- genera
 genera_names <- gsub("Escherichia_Shigella", "Escherichia and Shigella", genera_vec)
 genera_names <- gsub("_", " ", genera_names)
+genera_names <- gsub("Ruminococcus2", "Ruminococcus 2", genera_names)
 rm(genera)
 outcomes <- c(alpha_vec, phyla_vec, genera_vec)
 outcomes_names <- c("Specific richness", "Shannon diversity", 

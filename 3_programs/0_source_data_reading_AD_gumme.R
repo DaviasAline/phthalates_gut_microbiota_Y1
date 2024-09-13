@@ -16,6 +16,11 @@ metadata <- read_sas(
   "0_source_data/base_aline_211115.sas7bdat",                                   # base de données SEPAGES
   catalog_file = "0_source_data/formats.sas7bcat")
 
+bdd_sg <- read_sas(
+  "0_source_data/base_aline_220909.sas7bdat",                                   # base de données SEPAGES plus récente avec les gravités spécifiques
+  catalog_file = "0_source_data/formats.sas7bcat") %>%
+  select(ident, mo_pool_sg_T1, mo_pool_sg_T3, ch_pool_sg_Y1)
+
 bdd_crb <- read_sas(
   "0_source_data/date_selle_aline210520.sas7bdat",                              # base avec les dates de prélévement selles IAB (recu séparément)
   NULL)         
@@ -57,6 +62,7 @@ var_lab(solidfood_Y1$ident) <- NULL
 var_lab(weight_length_Y1$ident) <- NULL
 var_lab(metadata_microbiote$ident) <- NULL
 var_lab(metadata_microbiote$ch_feces_ID_Y1) <- NULL
+var_lab(bdd_sg$ident)  <- NULL
 
 bdd <- 
   left_join(metadata,
@@ -77,6 +83,7 @@ bdd <- left_join(bdd, age_feces_Y1, by = "ident")
 bdd <- left_join(bdd, atb_Y1, by = "ident")
 bdd <- left_join(bdd, solidfood_Y1, by = "ident")
 bdd <- left_join(bdd, weight_length_Y1, by = "ident")
+bdd <- left_join(bdd, bdd_sg, by = "ident")
 
 rm(
   bdd_crb,
@@ -87,6 +94,7 @@ rm(
   age_feces_Y1,
   atb_Y1,
   solidfood_Y1,
-  weight_length_Y1)
+  weight_length_Y1, 
+  bdd_sg)
 
 save.image("1_intermediate_data/0_source_data_reading_AD_gumme.RData")

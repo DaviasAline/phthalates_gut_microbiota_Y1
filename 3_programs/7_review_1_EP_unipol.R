@@ -89,7 +89,7 @@ main_model <- function(outcome, data) {
 }
 
 # Fonction pour exécuter la régression linéaire (analyses de sensibilité gravité spécifique)
-sensi_12 <- function(outcome, exposure, covariates) {
+sensi_12_a <- function(outcome, exposure, covariates) {
   formula_str <- paste(outcome, "~", exposure, "+", paste(covariates, collapse = "+"))
   model <- lm(as.formula(formula_str), data = bdd)
   summary_model <- summary(model)
@@ -99,7 +99,22 @@ sensi_12 <- function(outcome, exposure, covariates) {
   conf_int <- confint(model, level = 0.95)[exposure, ]
   p_value <- summary_model$coefficients[exposure, "Pr(>|t|)"]
   
-  return(list(beta_sg = beta, conf.low_sg = conf_int[1], conf.high_sg = conf_int[2], p.value_sg = p_value))
+  return(list(beta_sg_std = beta, conf.low_sg_std = conf_int[1], conf.high_sg_std = conf_int[2], p.value_sg_std = p_value))
+}
+
+sensi_12_b <- function(outcome, exposure, covariates) {
+  formula_str <- paste(outcome, "~", exposure, "+", paste(covariates, collapse = "+"))
+  model <- lm(as.formula(formula_str), data = bdd)
+  summary_model <- summary(model)
+  
+  beta <- summary_model$coefficients[exposure, "Estimate"]                      # Extraction des résultats pour l'exposition principale seulement
+  conf_int <- confint(model, level = 0.95)[exposure, ]
+  p_value <- summary_model$coefficients[exposure, "Pr(>|t|)"]
+  
+  return(list(beta_sg_adj = beta, 
+              conf.low_sg_adj = conf_int[1], 
+              conf.high_sg_adj = conf_int[2], 
+              p.value_sg_adj = p_value))
 }
 
 # Fonction pour exécuter la régression linéaire (analyses de sensibilité hospitalisation)
@@ -535,15 +550,53 @@ rm(ASV_rarefied_5000_Y1, metric_bray_curtis,
 
 # Article ----
 ## Table 1 : alpha div - univar ----
-Table_1 <- create_tbl_for_range(1:2, alpha_vec)
+Table_1 <- results_main %>% 
+  mutate(
+    Exposure = factor(Exposure, levels = c("ΣDEHP", "MnBP", "ΣDiNP", "MiBP", "MBzP", "MEP", "ohMPHP", "ΣDINCH")), 
+    Window = factor(Window, levels = c("Trim.2", "Trim.3", "12 months")), 
+    p.value = case_when(p.value < 0.001 ~ "<0.001",
+                        p.value < 0.01 ~ format(round(p.value, 3), nsmall = 3),
+                        p.value > 0.01 ~ format(round(p.value, 2), nsmall = 2)), 
+    beta = case_when(Outcome_name == "Specific richness" ~ format(round(beta, 1), nsmall = 1), 
+                     Outcome_name == "Shannon diversity" ~format(round(beta, 2), nsmall  = 2)),
+    conf.low = case_when(Outcome_name == "Specific richness" ~ format(round(conf.low, 1), nsmall = 1), 
+                         Outcome_name == "Shannon diversity" ~format(round(conf.low, 2), nsmall  = 2)),
+    conf.high = case_when(Outcome_name == "Specific richness" ~ format(round(conf.high, 1), nsmall = 1), 
+                          Outcome_name == "Shannon diversity" ~format(round(conf.high, 2), nsmall  = 2)),
+    CI = paste(conf.low, conf.high, sep = ", ")) %>%
+  arrange(Outcome, Exposure, Window) %>%
+  select(Outcome_name, Exposure_window_rec, beta, CI, p.value) %>% 
+  filter(Outcome_name %in% c("Specific richness", "Shannon diversity")) %>% 
+  pivot_wider(names_from = Outcome_name, values_from = c("beta", "CI", "p.value")) %>%
+  select(Exposure_window_rec, contains("richness"), contains("Shannon")) 
+
+write_xlsx(Table_1, "4_output/review/Table_1.xlsx")
 
 ## Table 2 : phyla - univar ----
-Table_2 <- create_tbl_for_range(3:6, phyla_vec)
-Table_2 <- Table_2 %>%
-  modify_table_body(~ .x %>% 
-                      filter(variable %in% c("ch_DEHP_ms_i_cor_Y1_ln", 
-                                             "ch_MEP_i_cor_Y1_ln", 
-                                             "ch_ohMPHP_i_cor_Y1_ln")))
+Table_2 <- results_main %>% 
+  mutate(
+    Exposure = factor(Exposure, levels = c("ΣDEHP", "MnBP", "ΣDiNP", "MiBP", "MBzP", "MEP", "ohMPHP", "ΣDINCH")), 
+    Window = factor(Window, levels = c("Trim.2", "Trim.3", "12 months")), 
+    beta = format(round(beta, 1), nsmall = 1), 
+    conf.low = format(round(conf.low, 1), nsmall = 1), 
+    conf.high = format(round(conf.high, 1), nsmall = 1),
+    p.value = case_when(p.value < 0.001 ~ "<0.001",
+                        p.value < 0.01 ~ format(round(p.value, 3), nsmall = 3),
+                        p.value > 0.01 ~ format(round(p.value, 2), nsmall = 2)), 
+    CI = paste(conf.low, conf.high, sep = ", ")) %>%
+  arrange(Outcome, Exposure, Window) %>%
+  select(Outcome_name, Exposure_window_rec, beta, CI, p.value) %>% 
+  filter(Outcome_name %in% c("Firmicutes", "Actinobacteria", "Bacteroidetes", "Proteobacteria")) %>% 
+  pivot_wider(names_from = Outcome_name, values_from = c("beta", "CI", "p.value")) %>%
+  select(Exposure_window_rec, 
+         contains("Firmicutes"), 
+         contains("Actinobacteria"), 
+         contains("Bacteroidetes"), 
+         contains("Proteobacteria")) %>%
+  filter(Exposure_window_rec %in% c("ΣDEHP 12 months", 
+                         "MEP 12 months", 
+                         "ohMPHP 12 months")) 
+write_xlsx(Table_2, "4_output/review/Table_2.xlsx")
 
 ## Figure 1 : alpha div - univar ----
 forestplot_rich <- function(results_main, Outcome_name) {
@@ -841,18 +894,58 @@ rm(phthalates_ter)
 write_xlsx(Table_S7, "4_output/review/Table_S7.xlsx")
 
 ## Table S8 : phyla - univar ----
-Table_S8 <- create_tbl_for_range(3:6, phyla_vec)
-Table_S8 <- Table_S8 %>%
-  modify_table_body(~ .x %>% 
-                      filter(!variable %in% c("ch_DEHP_ms_i_cor_Y1_ln", 
-                                             "ch_MEP_i_cor_Y1_ln", 
-                                             "ch_ohMPHP_i_cor_Y1_ln")))
+Table_S8 <- results_main %>% 
+  mutate(
+    Exposure = factor(Exposure, levels = c("ΣDEHP", "MnBP", "ΣDiNP", "MiBP", "MBzP", "MEP", "ohMPHP", "ΣDINCH")), 
+    Window = factor(Window, levels = c("Trim.2", "Trim.3", "12 months")), 
+    beta = format(round(beta, 1), nsmall = 1), 
+    conf.low = format(round(conf.low, 1), nsmall = 1), 
+    conf.high = format(round(conf.high, 1), nsmall = 1),
+    p.value = case_when(p.value < 0.001 ~ "<0.001",
+                        p.value < 0.01 ~ format(round(p.value, 3), nsmall = 3),
+                        p.value > 0.01 ~ format(round(p.value, 2), nsmall = 2)), 
+    CI = paste(conf.low, conf.high, sep = ", ")) %>%
+  arrange(Outcome, Exposure, Window) %>%
+  select(Outcome_name, Exposure_window_rec, beta, CI, p.value) %>% 
+  filter(Outcome_name %in% c("Firmicutes", "Actinobacteria", "Bacteroidetes", "Proteobacteria")) %>% 
+  pivot_wider(names_from = Outcome_name, values_from = c("beta", "CI", "p.value")) %>%
+  select(Exposure_window_rec, 
+         contains("Firmicutes"), 
+         contains("Actinobacteria"), 
+         contains("Bacteroidetes"), 
+         contains("Proteobacteria")) %>%
+  filter(!Exposure_window_rec %in% c("ΣDEHP 12 months", 
+                                    "MEP 12 months", 
+                                    "ohMPHP 12 months")) 
+
+write_xlsx(Table_S8, "4_output/review/Table_S8.xlsx")
 
 ## Table S9 : phyla - multivar (PIP) ----
 # cf code 7.1_revision_1_EP_multipol.R
 
 ## Table S10 : genera - univar ----
-Table_S10 <- create_tbl_for_range(7:52, genera_vec)
+Table_S10 <- results_main %>% 
+  mutate(
+    Exposure = factor(Exposure, levels = c("ΣDEHP", "MnBP", "ΣDiNP", "MiBP", "MBzP", "MEP", "ohMPHP", "ΣDINCH")), 
+    Window = factor(Window, levels = c("Trim.2", "Trim.3", "12 months")), 
+    beta = format(round(beta, 1), nsmall = 1), 
+    conf.low = format(round(conf.low, 1), nsmall = 1), 
+    conf.high = format(round(conf.high, 1), nsmall = 1),
+    p.value = case_when(p.value < 0.001 ~ "<0.001",
+                        p.value < 0.01 ~ format(round(p.value, 3), nsmall = 3),
+                        p.value > 0.01 ~ format(round(p.value, 2), nsmall = 2)), 
+    CI = paste(conf.low, conf.high, sep = ", ")) %>%
+  arrange(Outcome, Exposure, Window) %>%
+  select(Outcome_name, Exposure_window_rec, beta, CI, p.value) %>% 
+  filter(Outcome_name %in% genera_names) %>% 
+  pivot_wider(names_from = Outcome_name, values_from = c("beta", "CI", "p.value")) %>% 
+  select(
+    Exposure_window_rec, 
+    unlist(lapply(genera_names, function(name) {
+      paste0(c("beta_", "CI_", "p.value_"), name)
+    }))
+  ) 
+write_xlsx(Table_S10, "4_output/review/Table_S10.xlsx")
 
 ## Table S11 : sensitivity - rarefaction threshold ----
 Table_S11_a <- results_main %>%                                                  # Colonnes analyses principales
@@ -974,36 +1067,37 @@ write_xlsx(Table_S11, "4_output/review/Table_S11.xlsx")
   
 
 ## Table S12 : sensitivity - specific gravity ----
-phthalates_sensi_sg <- phthalates %>% str_replace_all("_i_cor", "_i_cor_sg")
-phthalates_sensi_sg_pre <- bdd %>% select(all_of(phthalates_sensi_sg)) %>% select(contains("t2"), contains("t3")) %>% colnames()
-phthalates_sensi_sg_post <- bdd %>% select(all_of(phthalates_sensi_sg)) %>% select(contains("Y1")) %>% colnames()
+### utilisation des variables d'espo standardisés sur la gravité spécifique 
+phthalates_sensi_sg_std <- phthalates %>% str_replace_all("_i_cor", "_i_cor_sg")
+phthalates_sensi_sg_std_pre <- bdd %>% select(all_of(phthalates_sensi_sg_std)) %>% select(contains("t2"), contains("t3")) %>% colnames()
+phthalates_sensi_sg_std_post <- bdd %>% select(all_of(phthalates_sensi_sg_std)) %>% select(contains("Y1")) %>% colnames()
 
-Table_S12 <- list()
+Table_S12_a <- list()
 
 for (i in 1:length(outcomes)) {                                                 # Boucle sur chaque outcome
   outcome <- outcomes[i]
   outcome_results <- list()
   
-  for (j in 1:length(phthalates_sensi_sg_pre)) {                                # Boucle sur les variables explicatives "phthalates_sensi_sg_pre"
-    exposure <- phthalates_sensi_sg_pre[j]
-    regression_result <- sensi_10(outcome, exposure, covariates_pre)
+  for (j in 1:length(phthalates_sensi_sg_std_pre)) {                                # Boucle sur les variables explicatives "phthalates_sensi_sg_std_pre"
+    exposure <- phthalates_sensi_sg_std_pre[j]
+    regression_result <- sensi_12_a(outcome, exposure, covariates_pre)
     regression_result$Outcome_name <- outcome
     regression_result$Exposure_window_rec <- exposure
     outcome_results[[length(outcome_results) + 1]] <- regression_result
   }
   
-  for (k in 1:length(phthalates_sensi_sg_post)) {                               # Boucle sur les variables explicatives "phthalates_sensi_sg_post"
-    exposure <- phthalates_sensi_sg_post[k]
-    regression_result <- sensi_10(outcome, exposure, covariates_post)
+  for (k in 1:length(phthalates_sensi_sg_std_post)) {                               # Boucle sur les variables explicatives "phthalates_sensi_sg_std_post"
+    exposure <- phthalates_sensi_sg_std_post[k]
+    regression_result <- sensi_12_a(outcome, exposure, covariates_post)
     regression_result$Outcome_name <- outcome
     regression_result$Exposure_window_rec <- exposure
     outcome_results[[length(outcome_results) + 1]] <- regression_result
   }
   
-  Table_S12[[i]] <- outcome_results                                             # Stocker les résultats pour cet outcome
+  Table_S12_a[[i]] <- outcome_results                                             # Stocker les résultats pour cet outcome
 }
 
-Table_S12 <- do.call(rbind, lapply(Table_S12, function(outcome_list) {          # Convertir la liste de résultats en un seul tableau
+Table_S12_a <- do.call(rbind, lapply(Table_S12_a, function(outcome_list) {          # Convertir la liste de résultats en un seul tableau
   do.call(rbind, lapply(outcome_list, function(x) {
     as.data.frame(x)
   }))
@@ -1011,9 +1105,9 @@ Table_S12 <- do.call(rbind, lapply(Table_S12, function(outcome_list) {          
 
 rm(i, j, k, outcome_results, regression_result, outcome, exposure)
 
-Table_S12 <- Table_S12 %>%                                                      # Réorganisation tableau brut des resultats (pour figures)                   
+Table_S12_a <- Table_S12_a %>%                                                      # Réorganisation tableau brut des resultats (pour figures)                   
   mutate(
-    Exposure_window_rec = factor(Exposure_window_rec, levels = phthalates_sensi_sg), 
+    Exposure_window_rec = factor(Exposure_window_rec, levels = phthalates_sensi_sg_std), 
     Outcome_name = factor(Outcome_name, levels = outcomes), 
     Exposure_window_rec = str_replace_all(Exposure_window_rec,
                                           c("mo_" = "",
@@ -1039,52 +1133,165 @@ Table_S12 <- Table_S12 %>%                                                      
                                      "Escherichia_Shigella" = "Escherichia and Shigella",
                                      "_" = " "))) %>%
   select(Outcome_name, Exposure_window_rec, 
-         beta_sg, conf.low_sg, conf.high_sg, p.value_sg) %>%
+         beta_sg_std, conf.low_sg_std, conf.high_sg_std, p.value_sg_std) %>%
   arrange(Outcome_name, Exposure_window_rec)
 
-Table_S12 <- left_join(
+Table_S12_a <- left_join(
   results_main[, c("Outcome_name", "Exposure_window_rec", "beta",
                    "conf.low", "conf.high", "p.value")], 
-  Table_S12, 
+  Table_S12_a, 
   by = c("Outcome_name", "Exposure_window_rec"))
 
+rm(phthalates_sensi_sg_std, 
+   phthalates_sensi_sg_std_pre, 
+   phthalates_sensi_sg_std_post)
+
+### utilisation de la standardisation sur les variables de la gravité spécifique 
+covariates_t2_sensi_12_b <- c(covariates_pre, "mo_pool_sg_T1")
+covariates_t3_sensi_12_b <- c(covariates_pre, "mo_pool_sg_T3")
+covariates_post_sensi_12_b <- c(covariates_post, "ch_pool_sg_Y1")
+
+phthalates_t2 <- bdd %>% select(all_of(phthalates)) %>% select(contains("t2")) %>% colnames()
+phthalates_t3 <- bdd %>% select(all_of(phthalates)) %>% select(contains("t3")) %>% colnames()
+
+Table_S12_b <- list()
+
+for (i in 1:length(outcomes)) {                                                 # Boucle sur chaque outcome
+  outcome <- outcomes[i]
+  outcome_results <- list()
+  
+  for (j in 1:length(phthalates_t2)) {                                          # Boucle sur les variables explicatives "phthalates_t2"
+    exposure <- phthalates_t2[j]
+    regression_result <- sensi_12_b(outcome, exposure, covariates_t2_sensi_12_b)
+    regression_result$Outcome_name <- outcome
+    regression_result$Exposure_window_rec <- exposure
+    outcome_results[[length(outcome_results) + 1]] <- regression_result
+  }
+  
+  for (k in 1:length(phthalates_t3)) {                                          # Boucle sur les variables explicatives "phthalates_t3"
+    exposure <- phthalates_t3[k]
+    regression_result <- sensi_12_b(outcome, exposure, covariates_t3_sensi_12_b)
+    regression_result$Outcome_name <- outcome
+    regression_result$Exposure_window_rec <- exposure
+    outcome_results[[length(outcome_results) + 1]] <- regression_result
+  }
+  
+  for (m in 1:length(phthalates_post)) {                                        # Boucle sur les variables explicatives "phthalates_post"
+    exposure <- phthalates_post[m]
+    regression_result <- sensi_12_b(outcome, exposure, covariates_post_sensi_12_b)
+    regression_result$Outcome_name <- outcome
+    regression_result$Exposure_window_rec <- exposure
+    outcome_results[[length(outcome_results) + 1]] <- regression_result
+  }
+  
+  Table_S12_b[[i]] <- outcome_results                                           # Stocker les résultats pour cet outcome
+}
+
+Table_S12_b <- do.call(rbind, lapply(Table_S12_b, function(outcome_list) {      # Convertir la liste de résultats en un seul tableau
+  do.call(rbind, lapply(outcome_list, function(x) {
+    as.data.frame(x)
+  }))
+}))
+
+rm(i, j, k, m, outcome_results, regression_result, outcome, exposure)
+
+Table_S12_b <- Table_S12_b %>%                                                  # Réorganisation tableau brut des resultats (pour figures)                   
+  mutate(
+    Exposure_window_rec = factor(Exposure_window_rec, levels = phthalates), 
+    Outcome_name = factor(Outcome_name, levels = outcomes), 
+    Exposure_window_rec = str_replace_all(Exposure_window_rec,
+                                          c("mo_" = "",
+                                            "ch_" = "",
+                                            "_i_cor_" = " ", 
+                                            "_ln" = "",
+                                            "ln" = "",
+                                            "_cor" = "", 
+                                            "t2" = "trim.2", 
+                                            "t3" = "trim.3", 
+                                            "Y1" = "12 months", 
+                                            "_ms" = "", 
+                                            "DEHP" = "ΣDEHP",
+                                            "DiNP" = "ΣDiNP",
+                                            "DINCH" = "ΣDINCH")), 
+    Outcome_name = str_replace_all(Outcome_name, 
+                                   c("ch_feces_SpecRich_5000_ASV_Y1" = "Specific richness", 
+                                     "ch_feces_Shannon_5000_ASV_Y1" = "Shannon diversity", 
+                                     "ch_feces_rel_p1_Y1" = "Firmicutes", 
+                                     "ch_feces_rel_p2_Y1" = "Actinobacteria", 
+                                     "ch_feces_rel_p3_Y1" = "Bacteroidetes", 
+                                     "ch_feces_rel_p4_Y1" = "Proteobacteria", 
+                                     "Escherichia_Shigella" = "Escherichia and Shigella",
+                                     "_" = " "))) %>%
+  select(Outcome_name, Exposure_window_rec, 
+         beta_sg_adj, conf.low_sg_adj, conf.high_sg_adj, p.value_sg_adj) %>%
+  arrange(Outcome_name, Exposure_window_rec)
+
+Table_S12_b <- left_join(
+  results_main[, c("Outcome_name", "Exposure_window_rec", "beta",
+                   "conf.low", "conf.high", "p.value")], 
+  Table_S12_b, 
+  by = c("Outcome_name", "Exposure_window_rec"))
+
+rm(covariates_t2_sensi_12_b, 
+   covariates_t3_sensi_12_b, 
+   covariates_post_sensi_12_b, 
+   phthalates_t2, 
+   phthalates_t3)
+
+### Assemblage de Table_S12_a et Table_S12_b
+Table_S12 <- right_join(Table_S12_a, Table_S12_b, 
+                        by = c("Outcome_name", 
+                               "Exposure_window_rec",
+                               "beta", "conf.low", "conf.high", "p.value" ))
+
 Table_S12 <- Table_S12 %>%
-  filter(p.value <0.05 | p.value_sg <0.05) %>%
+  filter(p.value <0.05 | p.value_sg_std <0.05 | p.value_sg_adj <0.05) %>%
   mutate(
     Outcome_name = factor(Outcome_name, levels = c("Specific richness", "Shannon diversity", 
-                                    "Firmicutes", "Actinobacteria", 
-                                    "Bacteroidetes", "Proteobacteria",
-                                    genera_names)), 
+                                                   "Firmicutes", "Actinobacteria", 
+                                                   "Bacteroidetes", "Proteobacteria",
+                                                   genera_names)), 
+    
     conf.low = format(round(conf.low, 1), digits = 1),
     conf.high = format(round(conf.high, 1), digits = 1),
-    conf.low_sg = format(round(conf.low_sg, 1), digits = 1),
-    conf.high_sg = format(round(conf.high_sg, 1), digits = 1),
+    conf.low_sg_std = format(round(conf.low_sg_std, 1), digits = 1),
+    conf.high_sg_std = format(round(conf.high_sg_std, 1), digits = 1),
+    conf.low_sg_adj = format(round(conf.low_sg_adj, 1), digits = 1),
+    conf.high_sg_adj = format(round(conf.high_sg_adj, 1), digits = 1),
+    
     "95% CI" = paste(conf.low, conf.high, sep = ", "), 
-    "95% CI sg" = paste(conf.low_sg, conf.high_sg, sep = ", "), 
+    "95% CI sg std" = paste(conf.low_sg_std, conf.high_sg_std, sep = ", "), 
+    "95% CI sg adj" = paste(conf.low_sg_adj, conf.high_sg_adj, sep = ", "), 
+    
     beta = ifelse(Outcome_name == "Shannon diversity", 
                   format(round(beta, 2), digits = 2),
                   format(round(beta, 1), digits = 1)), 
-    beta_sg = ifelse(Outcome_name == "Shannon diversity", 
-                  format(round(beta_sg, 2), digits = 2),
-                  format(round(beta_sg, 1), digits = 1)), 
-    p.value = sapply(p.value, format_p_value), 
-    p.value_sg = sapply(p.value_sg, format_p_value)) %>%
+    beta_sg_std = ifelse(Outcome_name == "Shannon diversity", 
+                         format(round(beta_sg_std, 2), digits = 2),
+                         format(round(beta_sg_std, 1), digits = 1)), 
+    beta_sg_adj = ifelse(Outcome_name == "Shannon diversity", 
+                         format(round(beta_sg_adj, 2), digits = 2),
+                         format(round(beta_sg_adj, 1), digits = 1)), 
+    
+    p.value = case_when(p.value < 0.001 ~ "<0.001",
+                        p.value < 0.01 ~ format(round(p.value, 3), nsmall = 3),
+                        p.value > 0.01 ~ format(round(p.value, 2), nsmall = 2)), 
+    p.value_sg_std = case_when(p.value_sg_std < 0.001 ~ "<0.001",
+                               p.value_sg_std < 0.01 ~ format(round(p.value_sg_std, 3), nsmall = 3),
+                               p.value_sg_std > 0.01 ~ format(round(p.value_sg_std, 2), nsmall = 2)),
+    p.value_sg_adj = case_when(p.value_sg_adj < 0.001 ~ "<0.001",
+                               p.value_sg_adj < 0.01 ~ format(round(p.value_sg_adj, 3), nsmall = 3),
+                               p.value_sg_adj > 0.01 ~ format(round(p.value_sg_adj, 2), nsmall = 2))) %>%
   arrange(Outcome_name) %>%
   select("Outcome_name", "Exposure_window_rec", 
          "beta", "95% CI", "p.value",
-         "beta_sg", "95% CI sg","p.value_sg")
-
-rm(phthalates_sensi_sg, 
-   phthalates_sensi_sg_pre, 
-   phthalates_sensi_sg_post)
+         "beta_sg_std", "95% CI sg std","p.value_sg_std",
+         "beta_sg_adj", "95% CI sg adj","p.value_sg_adj") %>%
+  arrange(Outcome_name)
 
 write_xlsx(Table_S12, "4_output/review/Table_S12.xlsx")
 
-Table_S12 %>% filter(p.value <0.1 & p.value_sg <0.1) %>% View()
-Table_S12 %>% filter(p.value <0.05 & p.value_sg <0.05) %>% View()
-Table_S12 %>% filter(p.value <0.05 & p.value_sg >0.11) %>% View()
-Table_S12 %>% filter(p.value >0.11 & p.value_sg <0.05) %>% View()
-
+rm(Table_S12_a, Table_S12_b)
 
 ## Table S13 : sensitivity - hospitalization ----
 covariates_pre_sensi_13 <- c(covariates_pre, "ch_hospit_Y1")
@@ -1515,9 +1722,8 @@ rm(asv_raw_not_rarefied,
    process_outcome, 
    process_outcome_results, 
    scatterplot, 
-   sensi_10, 
-   sensi_11, 
-   sensi_12, 
+   sensi_12_a, 
+   sensi_12_b, 
    sensi_13, 
    sensi_14, 
    table_cor, 
