@@ -513,6 +513,13 @@ Table_S6 <- list(
     results_bkmr$alpha_Y1$`Shannon diversity`)) %>% 
   bind_rows()
 
+Table_S6 <- Table_S6 %>%
+  mutate(
+    variable = factor(variable, levels = phthalates)) %>%
+  arrange(variable)
+
+write_xlsx(Table_S6, "4_output/review/Table_S6.xlsx")
+
 ## Table_S9 ----
 Table_S9 <- list(
   T2 = pip_results_phyla(
@@ -532,7 +539,11 @@ Table_S9 <- list(
     results_bkmr$taxa_Y1$Proteobacteria)) %>%
   bind_rows()
 
-write_xlsx(Table_S6, "4_output/review/Table_S6.xlsx")
+Table_S9 <- Table_S9 %>%
+  mutate(
+    variable = factor(variable, levels = phthalates)) %>%
+  arrange(variable)
+
 write_xlsx(Table_S9, "4_output/review/Table_S9.xlsx")
 
 # Overall ----

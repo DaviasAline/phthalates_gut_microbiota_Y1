@@ -941,6 +941,35 @@ Table_S11 <- Table_S11_a %>%
   left_join(Table_S11_c, by = c("Outcome_name", "Exposure_window_rec")) 
 rm(bdd_Table_S11, Table_S11_a, Table_S11_b, Table_S11_c)
 
+Table_S11 <- Table_S11 %>%
+  mutate(
+    beta = format(round(beta, 2), nsmall = 2),
+    beta_5000 = format(round(beta_5000, 2), nsmall = 2), 
+    beta_10000 = format(round(beta_10000, 2), nsmall = 2),
+    conf.low = format(round(conf.low, 1), nsmall = 1), 
+    conf.high = format(round(conf.high, 1), nsmall = 1), 
+    conf.low_5000 = format(round(conf.low_5000, 1), nsmall = 1),  
+    conf.high_5000 = format(round(conf.high_5000, 1), nsmall = 1), 
+    conf.low_10000 = format(round(conf.low_10000, 1), nsmall = 1), 
+    conf.high_10000 = format(round(conf.high_10000, 1), nsmall = 1), 
+    CI = paste(conf.low, conf.high, sep = ", "),
+    CI_5000 = paste(conf.low_5000, conf.high_5000, sep = ", "),
+    CI_10000 = paste(conf.low_10000, conf.high_10000, sep = ", "), 
+    p.value = case_when(p.value < 0.001 ~ "<0.001",
+                        p.value < 0.01 ~ format(round(p.value, 3), nsmall = 3),
+                        p.value > 0.01 ~ format(round(p.value, 2), nsmall = 2)), 
+    p.value_5000 = case_when(p.value_5000 < 0.001 ~ "<0.001",
+                             p.value_5000 < 0.01 ~ format(round(p.value_5000, 3), nsmall = 3),
+                             p.value_5000 > 0.01 ~ format(round(p.value_5000, 2), nsmall = 2)), 
+    p.value_10000 = case_when(p.value_10000 < 0.001 ~ "<0.001",
+                              p.value_10000 < 0.01 ~ format(round(p.value_10000, 3), nsmall = 3),
+                              p.value_10000 > 0.01 ~ format(round(p.value_10000, 2), nsmall = 2))) %>%
+  select(Outcome_name, 
+         Exposure_window_rec, 
+         beta, CI, p.value,
+         beta_5000, CI_5000, p.value_5000, 
+         beta_10000, CI_10000, p.value_10000)
+
 write_xlsx(Table_S11, "4_output/review/Table_S11.xlsx")
   
 
@@ -1056,6 +1085,7 @@ Table_S12 %>% filter(p.value <0.05 & p.value_sg <0.05) %>% View()
 Table_S12 %>% filter(p.value <0.05 & p.value_sg >0.11) %>% View()
 Table_S12 %>% filter(p.value >0.11 & p.value_sg <0.05) %>% View()
 
+
 ## Table S13 : sensitivity - hospitalization ----
 covariates_pre_sensi_13 <- c(covariates_pre, "ch_hospit_Y1")
 covariates_post_sensi_13 <- c(covariates_post, "ch_hospit_Y1")
@@ -1149,8 +1179,12 @@ Table_S13 <- Table_S13 %>%
     beta_hospit = ifelse(Outcome_name == "Shannon diversity", 
                      format(round(beta_hospit, 2), digits = 2),
                      format(round(beta_hospit, 1), digits = 1)), 
-    p.value = sapply(p.value, format_p_value), 
-    p.value_hospit = sapply(p.value_hospit, format_p_value)) %>%
+    p.value = case_when(p.value < 0.001 ~ "<0.001",
+                        p.value < 0.01 ~ format(round(p.value, 3), nsmall = 3),
+                        p.value > 0.01 ~ format(round(p.value, 2), nsmall = 2)), 
+    p.value_hospit = case_when(p.value_hospit < 0.001 ~ "<0.001",
+                        p.value_hospit < 0.01 ~ format(round(p.value_hospit, 3), nsmall = 3),
+                        p.value_hospit > 0.01 ~ format(round(p.value_hospit, 2), nsmall = 2))) %>%
   arrange(Outcome_name) %>%
   select("Outcome_name", "Exposure_window_rec", 
          "beta", "95% CI", "p.value",
@@ -1257,8 +1291,12 @@ Table_S14 <- Table_S14 %>%
     beta_w_he = ifelse(Outcome_name == "Shannon diversity", 
                        format(round(beta_w_he, 2), digits = 2),
                        format(round(beta_w_he, 1), digits = 1)), 
-    p.value = sapply(p.value, format_p_value), 
-    p.value_w_he = sapply(p.value_w_he, format_p_value)) %>%
+    p.value = case_when(p.value < 0.001 ~ "<0.001",
+                        p.value < 0.01 ~ format(round(p.value, 3), nsmall = 3),
+                        p.value > 0.01 ~ format(round(p.value, 2), nsmall = 2)), 
+    p.value_w_he = case_when(p.value_w_he < 0.001 ~ "<0.001",
+                        p.value_w_he < 0.01 ~ format(round(p.value_w_he, 3), nsmall = 3),
+                        p.value_w_he > 0.01 ~ format(round(p.value_w_he, 2), nsmall = 2))) %>%
   arrange(Outcome_name) %>%
   select("Outcome_name", "Exposure_window_rec", 
          "beta", "95% CI", "p.value",
@@ -1487,4 +1525,7 @@ rm(asv_raw_not_rarefied,
    test_sensi_sg, 
    verif_distrib)                        
 save.image("4_output/review/results_review_unipol.RData")
+
+# Récupérer les résultats ----
+load("4_output/review/results_review_unipol.RData")
 
