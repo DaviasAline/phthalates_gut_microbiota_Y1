@@ -1735,3 +1735,111 @@ save.image("4_output/review/results_review_unipol.RData")
 # Récupérer les résultats ----
 load("4_output/review/results_review_unipol.RData")
 
+# Autre points non enregistré dans les résultats ----
+## réponse au reviewer EP lié au choix de la méthode de comparaison multiple ----
+results_q_value_BH_div <- results_main %>%
+  select(Outcome, Exposure_window, p.value) %>%
+  filter(Outcome %in% alpha_vec) %>%
+  mutate(
+    q.value_div = p.adjust(p.value, method = "BH"))
+
+results_q_value_BH_taxa <- results_main %>%
+  select(Outcome, Exposure_window, p.value) %>%
+  filter(!Outcome %in% alpha_vec) %>%
+  mutate(
+    q.value_taxa = p.adjust(p.value, method = "BH"))
+
+results_main <- left_join(results_main, results_q_value_BH_div, by = c("Outcome", "Exposure_window", "p.value"))
+results_main <- left_join(results_main, results_q_value_BH_taxa, by = c("Outcome", "Exposure_window", "p.value"))
+
+justif_review_1 <- results_main %>% 
+  select(Outcome, Exposure_window, beta, conf.low, conf.high, p.value, q.value_div) %>%
+  filter(Outcome %in% alpha_vec) %>%
+  filter(q.value_div <0.05) %>% 
+  mutate(
+    beta = format(round(beta, 2), nsmall = 2),
+    conf.low = format(round(conf.low, 2), nsmall = 2),
+    conf.high = format(round(conf.high, 2), nsmall = 2),
+    `95%CI` = paste(conf.low, conf.high, sep = ", "),
+    p.value = case_when(p.value < 0.001 ~ "<0.001",
+                        p.value < 0.01 ~ format(round(p.value, 3), nsmall = 3),
+                        p.value > 0.01 ~ format(round(p.value, 2), nsmall = 2)),
+    q.value_div = case_when(q.value_div < 0.001 ~ "<0.001",
+                            q.value_div < 0.01 ~ format(round(q.value_div, 3), nsmall = 3),
+                            q.value_div > 0.01 ~ format(round(q.value_div, 2), nsmall = 2))) %>%
+  select(Outcome, Exposure = Exposure_window, beta, `95%CI`, p.value, q.value = q.value_div)
+
+justif_review_1_bis <- results_main %>% 
+  select(Outcome, Exposure_window, beta, conf.low, conf.high, p.value, q.value_taxa) %>%
+  filter(!Outcome %in% alpha_vec) %>%
+  filter(q.value_taxa <0.05) %>% 
+  mutate(
+    beta = format(round(beta, 1), nsmall = 1),
+    conf.low = format(round(conf.low, 1), nsmall = 1),
+    conf.high = format(round(conf.high, 1), nsmall = 1),
+    `95%CI` = paste(conf.low, conf.high, sep = ", "),
+    p.value = case_when(p.value < 0.001 ~ "<0.001",
+                        p.value < 0.01 ~ format(round(p.value, 3), nsmall = 3),
+                        p.value > 0.01 ~ format(round(p.value, 2), nsmall = 2)),
+    q.value_taxa = case_when(q.value_taxa < 0.001 ~ "<0.001",
+                             q.value_taxa < 0.01 ~ format(round(q.value_taxa, 3), nsmall = 3),
+                             q.value_taxa > 0.01 ~ format(round(q.value_taxa, 2), nsmall = 2))) %>%
+  select(Outcome, Exposure = Exposure_window, beta, `95%CI`, p.value, q.value = q.value_taxa)
+
+
+justif_review_1 <- rbind(justif_review_1, justif_review_1_bis)
+rm(justif_review_1_bis)
+write_xlsx(justif_review_1, "4_output/review/justif_review_1.xlsx")
+
+## figure pour le résumé graphique ----
+test <- results_main %>%
+  mutate(
+    FWER.p.value_taxa = ifelse(!Outcome_name %in% c("Specific richness", "Shannon diversity"), 
+                                p.value * 14 * 33, NA),
+    FWER.p.value_taxa = ifelse(FWER.p.value_taxa > 1, ">0.99", FWER.p.value_taxa),
+    FWER.p.value_shape_taxa = case_when(p.value< 0.00011 & 
+                                           !Outcome_name %in% c("Specific richness", 
+                                                               "Shannon diversity")~ "p.value <0.00011",
+                                         p.value > 0.00011 & 
+                                           !Outcome_name %in% c("Specific richness", 
+                                                               "Shannon diversity")~ "p.value >0.00011"), 
+    FWER.p.value_shape_taxa = fct_relevel(FWER.p.value_shape_taxa,
+                                           "p.value >0.00011", 
+                                           "p.value <0.00011"), 
+    
+    FWER.p.value_shape = ifelse(is.na(FWER.p.value_alpha), as.character(FWER.p.value_shape_taxa), as.character(FWER.p.value_shape_alpha)), 
+    FWER.p.value_shape = as.factor(FWER.p.value_shape)) %>%
+  select(Outcome_name, Exposure_window, beta, conf.low, conf.high, p.value, FWER.p.value_shape) %>%
+  filter(FWER.p.value_shape %in% c("p.value <0.00011", "p.value <0.0012"))
+
+
+plot_abstract <- test %>%
+  ggplot(aes(x = Exposure_window,
+             y = beta,
+             min = conf.low,
+             ymax = conf.high,
+             #color = interaction(exposure_window, term_2),
+             #color = term_rec,
+             color = FWER.p.value_shape)) +
+  geom_hline(yintercept = 0, linetype="dashed") +
+  geom_pointrange(position = position_dodge(width = 0.7), size = 0.4,
+                  aes(color = FWER.p.value_shape)) +
+  # labs(x = "Exposures", y = Outcome_name) +
+  theme_bw() +
+  coord_flip()  +
+  scale_color_manual(values = c("black", "red"),
+                     name = "") +
+  #guides(color = "none")+
+  theme(axis.title = element_text(size = 9),
+        axis.text = element_text(size = 9),
+        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 9),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.justification = "center",
+        legend.spacing.y = unit(0, "cm"),
+        legend.spacing.x = unit(0, "cm"),
+        legend.box.margin = margin(0,0,0,0, "cm"),
+        legend.margin = margin(0,0,0,0, "cm"))
+
+
