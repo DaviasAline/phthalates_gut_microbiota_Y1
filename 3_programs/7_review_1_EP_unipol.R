@@ -40,6 +40,7 @@ library(fields)
 library(future)
 library(future.apply)
 library(writexl)
+library(ggrepel)
 
 # Chargement des données ----
 load("1_intermediate_data/2_data_selection_AD_gumme.RData")
@@ -766,7 +767,22 @@ Figure_4 <- results_main  %>%
   labs(x = "-log10(P-value)", 
        y = "Genera", 
        shape = "") +
-  geom_text(aes(label = ifelse(`p.value` < 0.008, as.character(Exposure_window), "")), hjust = -0.07, vjust = -0.2, angle = 45, size = 3.5) +
+  geom_text_repel(aes(label = ifelse(`p.value` < 0.008, as.character(Exposure_window), "")), 
+                  hjust = -0.07,
+                  vjust = -0.2,
+                  angle = 42,
+                  size = 3.5,
+                  #segment.color = NA,   # supprimes les traits qui relient les points aux textes 
+                  direction = "y",      # argument pour faire les ajustements de position seulement dans le sens vertical
+                  #angle = 20, 
+                  seed = 1996,            # seed pour obtenir toujours le même ajustement 
+                  #box.padding = 0.5,
+                  # hjust = -0.05,        # place le texte un tout petit peu au dessus des points
+                  # vjust = 0.5,
+                  nudge_x = 0.005, 
+                  min.segment.length = 3,  # ne met que les traits de plus de 3
+                  max.overlaps = 20
+                  ) +
   scale_shape_manual(values = c("Beta<0" = 15, "Beta≥0" = 17)) +# 15: carré plein, 17: triangle plein
   theme(
     legend.position = "bottom",
@@ -775,12 +791,13 @@ Figure_4 <- results_main  %>%
     axis.text.y = element_text(face = "italic", size = 12)) +
   xlim(0, 5.8) 
 
-ggsave("4_output/review/Figure 4 (manhatanplot_genera).tiff", 
+Figure_4
+ggsave("4_output/review/Figure_4 (manhatanplot genera).tiff", 
        plot = Figure_4, 
        device = "tiff",
        units = "mm",
-       width = 300, 
-       height = 160,
+       width = 340, 
+       height = 200,
        dpi = 300,
        limitsize = FALSE)
 

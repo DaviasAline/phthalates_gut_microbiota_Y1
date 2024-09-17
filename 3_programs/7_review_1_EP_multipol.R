@@ -156,7 +156,7 @@ risks_overall <- function(fit, y, Z, covariates) {
     X = covariates,
     qs = seq(0.10, 0.90, by = 0.10),
     q.fixed = 0.10,
-    method = "exact")
+    method = "approx")
   return(results)
 }     
 
@@ -168,7 +168,7 @@ risks_singvar <- function(fit, y, Z, covariates) {
     X = covariates,
     qs.diff = c(0.25, 0.75),
     q.fixed = c(0.25, 0.50, 0.75),
-    method = "exact")
+    method = "approx")
   return(results)
 }
 
@@ -196,7 +196,16 @@ plot_risks.singvar <- function(risks.singvar, window, taxa,
   
   risks.singvar %>%
     mutate(
-      pollutant = sub("...$", "", pollutant)) %>%
+      pollutant = sub("...$", "", pollutant), 
+      pollutant = fct_relevel(pollutant,
+                              "ΣDINCH", 
+                              "ohMPHP", 
+                              "MEP", 
+                              "MBzP", 
+                              "MiBP", 
+                              "ΣDiNP",  
+                              "MnBP",  
+                              "ΣDEHP")) %>%
     filter({{window}} == window) %>%
     filter({{taxa}} == taxa) %>%
     ggplot(
@@ -702,8 +711,8 @@ table_bkmr_singvar <- bind_rows(
                             "MEP Y1", "MEP t3", "MEP t2", 
                             "MBzP Y1", "MBzP t3", "MBzP t2", 
                             "MiBP Y1", "MiBP t3", "MiBP t2",
-                            "MnBP Y1", "MnBP t3", "MnBP t2", 
                             "ΣDiNP Y1", "ΣDiNP t3", "ΣDiNP t2", 
+                            "MnBP Y1", "MnBP t3", "MnBP t2", 
                             "ΣDEHP Y1", "ΣDEHP t3", "ΣDEHP t2"))
 
 ## Figure S6 ----
@@ -713,21 +722,21 @@ Figure_S6 <-
                      legend.position = "none", axis.y = element_text(size = 12)) +
   plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "shan",  
                      title = "Shannon diversity", x_title = "", y_title = "", 
-                     legend.position = "none", axis.y = element_blank()) + 
+                     legend.position = "right", axis.y = element_blank()) + 
   
   plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "rich", 
                      title = "", x_title = bquote("3"^{rd}~trim.~exposure), y_title = "", 
                      legend.position = "none", axis.y = element_text(size = 12)) +
   plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "shan",
                      title = "", x_title = "", y_title = "", 
-                     legend.position = "none", axis.y = element_blank()) + 
+                     legend.position = "right", axis.y = element_blank()) + 
   
   plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "rich", 
                      title = "", x_title = "12-month exposure", y_title = "", 
                      legend.position = "none", axis.y = element_text(size = 12)) +
   plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "shan", 
                      title = "", x_title = "", y_title = "", 
-                     legend.position = "none", axis.y = element_blank()) + 
+                     legend.position = "right", axis.y = element_blank()) + 
   
   plot_layout(ncol = 2, nrow = 3) 
 
@@ -790,8 +799,6 @@ ggsave("4_output/review/Figure_S7.tiff",
        dpi = 300, 
        width = 300,
        height = 220)
-
-
 
 rm(bkmr_t2_alpha, bkmr_t3_alpha, bkmr_Y1_alpha, 
    bkmr_t2_phyla, bkmr_t3_phyla, bkmr_Y1_phyla, 
