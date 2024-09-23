@@ -1860,3 +1860,49 @@ plot_abstract <- test %>%
         legend.margin = margin(0,0,0,0, "cm"))
 
 
+## Associations entre la gravité spécifique et les paramètres de microbiote ----
+sg_vec <- c("mo_pool_sg_T1", "mo_pool_sg_T3", "ch_pool_sg_Y1")
+
+
+results_sg_outcome <- data.frame(
+  Outcome = character(),
+  Explicative = character(),
+  Beta = numeric(),
+  CI_Lower = numeric(),
+  CI_Upper = numeric(),
+  P_value = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Boucle pour faire les régressions linéaires
+for (outcome in outcomes) {
+  for (explicative in sg_vec) {
+    formule <- as.formula(paste(outcome, "~", explicative))
+    
+    modele <- lm(formule, data = bdd)
+    
+    beta <- coef(modele)[2]  # Coefficient de la variable explicative
+    p_value <- summary(modele)$coefficients[2, 4]  # p-value de la variable explicative
+    ci <- confint(modele, level = 0.95)[2, ]  # CI pour le coefficient
+    ci_lower <- ci[1]
+    ci_upper <- ci[2]
+    
+    results_sg_outcome <- rbind(results_sg_outcome, data.frame(
+      Outcome = outcome,
+      Explicative = explicative,
+      Beta = beta,
+      CI_Lower = ci_lower,
+      CI_Upper = ci_upper,
+      P_value = p_value
+    ))
+  }
+}
+
+# Afficher les résultats
+results_sg_outcome %>% filter(P_value <0.05) %>% View()
+results_sg_outcome %>% filter(Explicative == "mo_pool_sg_T1") %>% filter(P_value <0.05) %>% View()
+results_sg_outcome %>% filter(Explicative == "mo_pool_sg_T3") %>% filter(P_value <0.05) %>% View()
+results_sg_outcome %>% filter(Explicative == "ch_pool_sg_Y1") %>% filter(P_value <0.05) %>% View()
+
+
+
