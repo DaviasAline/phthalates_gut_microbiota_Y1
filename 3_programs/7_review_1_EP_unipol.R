@@ -1860,7 +1860,7 @@ plot_abstract <- test %>%
         legend.margin = margin(0,0,0,0, "cm"))
 
 
-## Associations entre la gravité spécifique et les paramètres de microbiote ----
+## Associations entre la gravité spécifique et les paramètres de microbiote (non ajusté) ----
 sg_vec <- c("mo_pool_sg_T1_rec", "mo_pool_sg_T3_rec", "ch_pool_sg_Y1_rec")
 
 results_sg_outcome <- data.frame(
@@ -1940,13 +1940,123 @@ results_sg_outcome <- results_sg_outcome %>%
 
 rm(outcome, formule, modele, sg_vec, explicative, beta, p_value, ci, ci_lower, ci_upper)
 
+
+
+## Associations entre la gravité spécifique et les paramètres de microbiote (ajusté) ----
+sg_vec <- c("mo_pool_sg_T1_rec", "mo_pool_sg_T3_rec", "ch_pool_sg_Y1_rec")
+covariates <- c("ch_feces_RUN_Y1", 
+               "ch_feces_age_w_Y1_i", 
+               "po_delmod", 
+               "ch_food_intro_Y1_3cat_i", 
+               "ch_antibio_Y1_2cat_i",
+               "mo_par_2cat",  
+               "mo_pets_i",  
+               "ch_sex", 
+               "mo_tob_gr_anyt_yn_n2_i", 
+               "Mo_ETS_anyT_yn1_opt_i",
+               "ch_ETS_12m_opt36m",
+               "mo_interpreg_3cat",
+               "mo_dipl_3cat_i",
+               "po_w_kg_3cat",
+               "po_he_3cat_i",
+               "po_gd",
+               "mo_age",
+               "mo_bmi_bepr_3cat_i",
+               "bf_duration_till48w_4cat_i")
+
+results_sg_outcome_adj <- data.frame(
+  Outcome = character(),
+  Explicative = character(),
+  Beta = numeric(),
+  CI_Lower = numeric(),
+  CI_Upper = numeric(),
+  P_value = numeric(),
+  stringsAsFactors = FALSE
+)
+
+bdd <- bdd %>% 
+  mutate(
+    mo_pool_sg_T1_rec = mo_pool_sg_T1 * 10, 
+    mo_pool_sg_T3_rec = mo_pool_sg_T3 * 10, 
+    ch_pool_sg_Y1_rec = ch_pool_sg_Y1 * 10)
+
+# Boucle pour faire les régressions linéaires
+for (outcome in outcomes) {
+  for (explicative in sg_vec) {
+    formule <- as.formula(paste(outcome, "~", explicative, "+", paste(covariates, collapse = " + ")))
+    
+    modele <- lm(formule, data = bdd)
+    
+    beta <- coef(modele)[2]  # Coefficient de la variable explicative
+    p_value <- summary(modele)$coefficients[2, 4]  # p-value de la variable explicative
+    ci <- confint(modele, level = 0.95)[2, ]  # CI pour le coefficient
+    ci_lower <- ci[1]
+    ci_upper <- ci[2]
+    
+    results_sg_outcome_adj <- rbind(results_sg_outcome_adj, data.frame(
+      Outcome = outcome,
+      Explicative = explicative,
+      Beta = beta,
+      CI_Lower = ci_lower,
+      CI_Upper = ci_upper,
+      P_value = p_value
+    ))
+  }
+}
+
+results_sg_outcome_adj <- results_sg_outcome_adj %>%
+  mutate(
+    Beta = ifelse(Outcome == "ch_feces_Shannon_5000_ASV_Y1", 
+                  format(round(Beta, 2), digits = 2),
+                  format(round(Beta, 1), digits = 1)), 
+    CI_Lower = ifelse(Outcome == "ch_feces_Shannon_5000_ASV_Y1", 
+                      format(round(CI_Lower, 2), digits = 2),
+                      format(round(CI_Lower, 1), digits = 1)), 
+    CI_Upper = ifelse(Outcome == "ch_feces_Shannon_5000_ASV_Y1", 
+                      format(round(CI_Upper, 2), digits = 2),
+                      format(round(CI_Upper, 1), digits = 1)), 
+    CI = paste(CI_Lower, CI_Upper, sep = ","), 
+    P_value = case_when(P_value < 0.0001 ~ format(round(P_value, 5), nsmall = 5),
+                        P_value < 0.001 ~ format(round(P_value, 4), nsmall = 4),
+                        P_value < 0.01 ~ format(round(P_value, 3), nsmall = 3),
+                        P_value > 0.01 ~ format(round(P_value, 2), nsmall = 2)), 
+    Outcome = fct_recode(
+      Outcome, 
+      "Specific richness" = "ch_feces_SpecRich_5000_ASV_Y1", 
+      "Shannon diversity" = "ch_feces_Shannon_5000_ASV_Y1",
+      "Firmicutes" = "ch_feces_rel_p1_Y1",
+      "Actinobacteria" = "ch_feces_rel_p2_Y1", 
+      "Bacteroidetes" = "ch_feces_rel_p3_Y1", 
+      "Proteobacteria" = "ch_feces_rel_p4_Y1",
+      "Clostridium IV" = "Clostridium_IV",
+      "Clostridium sensu stricto" = "Clostridium_sensu_stricto",
+      "Clostridium XlVa" = "Clostridium_XlVa",
+      "Clostridium XVIII" = "Clostridium_XVIII",
+      "Erysipelotrichaceae incertae sedis" = "Erysipelotrichaceae_incertae_sedis",
+      "Escherichia and Shigella" = "Escherichia_Shigella",
+      "Lachnospiracea incertae sedis" = "Lachnospiracea_incertae_sedis",
+      "Saccharibacteria genera incertae sedis" = "Saccharibacteria_genera_incertae_sedis"),
+    Outcome = factor(Outcome, levels = outcomes_names)) %>%
+  select(Outcome, Explicative, Beta, CI, P_value)
+
+rm(outcome, formule, modele, sg_vec, explicative, beta, p_value, ci, ci_lower, ci_upper)
+
+
+results_sg_outcome_adj <- results_sg_outcome_adj %>% 
+  rename(Beta_adj = Beta, 
+         CI_adj = CI, 
+         P_value_adj = P_value)
+results_sg_outcome <- left_join(results_sg_outcome, 
+                                results_sg_outcome_adj, 
+                                by = c("Outcome", "Explicative"))
+
 write_xlsx(results_sg_outcome, "4_output/review/results_sg_outcome.xlsx")
 
 # Afficher les résultats
 results_sg_outcome %>% filter(P_value <0.05) %>% View()
-results_sg_outcome %>% filter(Explicative == "mo_pool_sg_T1_rec") %>% filter(P_value <0.05) %>% View()
-results_sg_outcome %>% filter(Explicative == "mo_pool_sg_T3_rec") %>% filter(P_value <0.05) %>% View()
-results_sg_outcome %>% filter(Explicative == "ch_pool_sg_Y1_rec") %>% filter(P_value <0.05) %>% View()
+results_sg_outcome %>% filter(Explicative == "mo_pool_sg_T1_rec") %>% filter(P_value <0.05 |  P_value_adj <0.05) %>% View()
+results_sg_outcome %>% filter(Explicative == "mo_pool_sg_T3_rec") %>% filter(P_value <0.05 |  P_value_adj <0.05) %>% View()
+results_sg_outcome %>% filter(Explicative == "ch_pool_sg_Y1_rec") %>% filter(P_value <0.05 |  P_value_adj <0.05) %>% View()
 
 
 bdd <- bdd %>%
