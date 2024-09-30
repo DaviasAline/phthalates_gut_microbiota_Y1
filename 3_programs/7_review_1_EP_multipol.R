@@ -601,14 +601,32 @@ table_bkmr_overall <- bind_rows(
 
 ## Figure 2 ----
 Figure_2 <- 
-  plot_risks.overall(results_bkmr_overall$T2$rich, title = "Specific richness", y_title = bquote("2"^{nd}~trim.~exposure), x_title = "") +
-  plot_risks.overall(results_bkmr_overall$T2$shan, title = "Shannon diversity", y_title = "", x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T2$rich, 
+                     title = "Specific richness", 
+                     y_title = bquote(Pregnancy~"2"^{nd}~trim.~exposure), 
+                     x_title = "") +
+  plot_risks.overall(results_bkmr_overall$T2$shan, 
+                     title = "Shannon diversity", 
+                     y_title = "", 
+                     x_title = "") + 
   
-  plot_risks.overall(results_bkmr_overall$T3$rich, title = "", y_title = bquote("3"^{rd}~trim.~exposure), x_title = "") +
-  plot_risks.overall(results_bkmr_overall$T3$shan, title = "", y_title = "", x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T3$rich, 
+                     title = "", 
+                     y_title = bquote(Child~"3"^{rd}~trim.~exposure), 
+                     x_title = "") +
+  plot_risks.overall(results_bkmr_overall$T3$shan, 
+                     title = "", 
+                     y_title = "", 
+                     x_title = "") + 
   
-  plot_risks.overall(results_bkmr_overall$Y1$rich, title = "", y_title = "12-month exposure", x_title = "quantile") +
-  plot_risks.overall(results_bkmr_overall$Y1$sha, title = "", y_title = "", x_title = "quantile") + 
+  plot_risks.overall(results_bkmr_overall$Y1$rich, 
+                     title = "", 
+                     y_title = "Child \n 12-month exposure", 
+                     x_title = "quantile") +
+  plot_risks.overall(results_bkmr_overall$Y1$sha, 
+                     title = "", 
+                     y_title = "", 
+                     x_title = "quantile") + 
   
   plot_layout(ncol = 2, nrow = 3) 
 

@@ -2039,7 +2039,7 @@ results_sg_outcome_adj <- results_sg_outcome_adj %>%
     Outcome = factor(Outcome, levels = outcomes_names)) %>%
   select(Outcome, Explicative, Beta, CI, P_value)
 
-rm(outcome, formule, modele, sg_vec, explicative, beta, p_value, ci, ci_lower, ci_upper)
+rm(outcome, formule, modele, sg_vec, explicative, beta, p_value, ci, ci_lower, ci_upper, covariates)
 
 
 results_sg_outcome_adj <- results_sg_outcome_adj %>% 
@@ -2049,18 +2049,77 @@ results_sg_outcome_adj <- results_sg_outcome_adj %>%
 results_sg_outcome <- left_join(results_sg_outcome, 
                                 results_sg_outcome_adj, 
                                 by = c("Outcome", "Explicative"))
+rm(results_sg_outcome_adj)
 
-write_xlsx(results_sg_outcome, "4_output/review/results_sg_outcome.xlsx")
-
-# Afficher les résultats
 results_sg_outcome %>% filter(P_value <0.05) %>% View()
 results_sg_outcome %>% filter(Explicative == "mo_pool_sg_T1_rec") %>% filter(P_value <0.05 |  P_value_adj <0.05) %>% View()
 results_sg_outcome %>% filter(Explicative == "mo_pool_sg_T3_rec") %>% filter(P_value <0.05 |  P_value_adj <0.05) %>% View()
 results_sg_outcome %>% filter(Explicative == "ch_pool_sg_Y1_rec") %>% filter(P_value <0.05 |  P_value_adj <0.05) %>% View()
 
 
-bdd <- bdd %>%
-  mutate(rowSums_genera = rowSums(bdd[, genera_total]))
+# bdd <- bdd %>%
+#   mutate(rowSums_genera = rowSums(bdd[, genera_total]))
+# 
+# cor.test(bdd$ch_feces_SpecRich_5000_ASV_Y1, bdd$rowSums_genera)
+# cor.test(bdd$ch_feces_Shannon_5000_ASV_Y1, bdd$rowSums_genera)
 
-cor.test(bdd$ch_feces_SpecRich_5000_ASV_Y1, bdd$rowSums_genera)
-cor.test(bdd$ch_feces_Shannon_5000_ASV_Y1, bdd$rowSums_genera)
+
+## Associations GS --> pththalates ----
+phthalates_t2 <- bdd %>% select(all_of(phthalates)) %>% select(contains("t2")) %>% colnames()
+phthalates_t3 <- bdd %>% select(all_of(phthalates)) %>% select(contains("t3")) %>% colnames()
+
+bdd <- bdd %>% 
+  mutate(
+    mo_pool_sg_T1_rec = mo_pool_sg_T1 * 10, 
+    mo_pool_sg_T3_rec = mo_pool_sg_T3 * 10, 
+    ch_pool_sg_Y1_rec = ch_pool_sg_Y1 * 10)
+
+list_exp_outcomes <- list(
+  mo_pool_sg_T1_rec = phthalates_t2,
+  mo_pool_sg_T3_rec = phthalates_t3,
+  ch_pool_sg_Y1_rec = phthalates_post)
+
+
+run_lm <- function(explicative, outcome) {
+  model <- lm(as.formula(paste(outcome, "~", explicative)), data = bdd)
+  
+  tidy_results <- tidy(model) %>% filter(term == explicative) 
+  confint_results <- confint(model, level = 0.95)[explicative, ]
+
+  tidy_results %>%
+    mutate(conf.low = confint_results[1],  
+           conf.high = confint_results[2],
+           Outcome = outcome,             
+           Explicative = explicative)  
+}
+
+results_sg_exposure <- bind_rows(
+  lapply(names(list_exp_outcomes), function(explicative) {
+    outcomes <- list_exp_outcomes[[explicative]]
+    bind_rows(lapply(outcomes, function(outcome) {
+      run_lm(explicative, outcome)
+    }))
+  })
+)
+
+results_sg_exposure <- results_sg_exposure %>%
+  select(Outcome, Explicative, estimate, conf.low, conf.high, p.value) %>%
+  rename(Beta = estimate,
+         P_value = p.value) %>%
+  mutate(
+      Beta = format(round(Beta, 2), digits = 2), 
+      conf.low = format(round(conf.low, 2), digits = 2),
+      conf.high = format(round(conf.high, 2), digits = 2),
+      CI = paste(conf.low, conf.high, sep = ","), 
+      P_value = as.numeric(P_value),
+      P_value = format(round(P_value, 2), digits = 2)) %>%
+  select(Outcome, Explicative, Beta, CI, P_value)
+
+rm(phthalates_t2, phthalates_t3, list_exp_outcomes, run_lm)
+
+
+write_xlsx(
+  list("sensi_sg" = Table_S12, 
+       "results_sg_outcome" = results_sg_outcome, 
+       "results_sg_exposure" = results_sg_exposure), 
+  "review_1_specific_gravity.xlsx")
