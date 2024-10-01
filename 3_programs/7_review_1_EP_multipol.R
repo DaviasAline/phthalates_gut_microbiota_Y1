@@ -612,7 +612,7 @@ Figure_2 <-
   
   plot_risks.overall(results_bkmr_overall$T3$rich, 
                      title = "", 
-                     y_title = bquote(Child~"3"^{rd}~trim.~exposure), 
+                     y_title = bquote(Pregnancy~"3"^{rd}~trim.~exposure), 
                      x_title = "") +
   plot_risks.overall(results_bkmr_overall$T3$shan, 
                      title = "", 
@@ -621,7 +621,7 @@ Figure_2 <-
   
   plot_risks.overall(results_bkmr_overall$Y1$rich, 
                      title = "", 
-                     y_title = "Child \n 12-month exposure", 
+                     y_title = "Child 12-month exposure", 
                      x_title = "quantile") +
   plot_risks.overall(results_bkmr_overall$Y1$sha, 
                      title = "", 
@@ -640,20 +640,55 @@ ggsave("4_output/review/Figure_2.tiff",
 
 ## Figure 3 ----
 Figure_3 <- 
-  plot_risks.overall(results_bkmr_overall$T2$p1, title = "Phylum Firmicutes", y_title = bquote("2"^{nd}~trim.~exposure), x_title = "") +
-  plot_risks.overall(results_bkmr_overall$T2$p2, title = "Phylum Actinobacteria", y_title = "", x_title = "") + 
-  plot_risks.overall(results_bkmr_overall$T2$p3, title = "Phylum Bacteroidetes", y_title = "", x_title = "") + 
-  plot_risks.overall(results_bkmr_overall$T2$p4, title = "Phylum Proteobacteria", y_title = "", x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T2$p1, 
+                     title = "Phylum Firmicutes", 
+                     y_title = bquote(Pregnancy~"2"^{nd}~trim.~exposure), 
+                     x_title = "") +
+  plot_risks.overall(results_bkmr_overall$T2$p2, 
+                     title = "Phylum Actinobacteria", 
+                     y_title = "", 
+                     x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T2$p3, 
+                     title = "Phylum Bacteroidetes", 
+                     y_title = "", 
+                     x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T2$p4, 
+                     title = "Phylum Proteobacteria", 
+                     y_title = "",
+                     x_title = "") + 
   
-  plot_risks.overall(results_bkmr_overall$T3$p1, title = "", y_title = bquote("3"^{rd}~trim.~exposure), x_title = "") +
-  plot_risks.overall(results_bkmr_overall$T3$p2, title = "", y_title = "", x_title = "") + 
-  plot_risks.overall(results_bkmr_overall$T3$p3, title = "", y_title = "", x_title = "") + 
-  plot_risks.overall(results_bkmr_overall$T3$p4, title = "", y_title = "", x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T3$p1, 
+                     title = "", 
+                     y_title = bquote(Pregnancy~"3"^{rd}~trim.~exposure), 
+                     x_title = "") +
+  plot_risks.overall(results_bkmr_overall$T3$p2, 
+                     title = "", 
+                     y_title = "", 
+                     x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T3$p3, 
+                     title = "", 
+                     y_title = "", 
+                     x_title = "") + 
+  plot_risks.overall(results_bkmr_overall$T3$p4, 
+                     title = "", 
+                     y_title = "", 
+                     x_title = "") + 
   
-  plot_risks.overall(results_bkmr_overall$Y1$p1, title = "", y_title = "12-month exposure", x_title = "quantile") +
-  plot_risks.overall(results_bkmr_overall$Y1$p2, title = "", y_title = "", x_title = "quantile") + 
-  plot_risks.overall(results_bkmr_overall$Y1$p3, title = "", y_title = "", x_title = "quantile") + 
-  plot_risks.overall(results_bkmr_overall$Y1$p4, title = "", y_title = "", x_title = "quantile") +   
+  plot_risks.overall(results_bkmr_overall$Y1$p1, 
+                     title = "", 
+                     y_title = "Child 12-month exposure", 
+                     x_title = "quantile") +
+  plot_risks.overall(results_bkmr_overall$Y1$p2, 
+                     title = "", 
+                     y_title = "", 
+                     x_title = "quantile") + 
+  plot_risks.overall(results_bkmr_overall$Y1$p3, 
+                     title = "", 
+                     y_title = "", 
+                     x_title = "quantile") + 
+  plot_risks.overall(results_bkmr_overall$Y1$p4, 
+                     title = "", y_title = "", 
+                     x_title = "quantile") +   
   
   plot_layout(ncol = 4, nrow = 3) 
 
@@ -735,26 +770,55 @@ table_bkmr_singvar <- bind_rows(
 
 ## Figure S6 ----
 Figure_S6 <- 
-  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "rich", 
-                     title = "Specific richness", x_title = bquote("2"^{nd}~trim.~exposure), y_title = "", 
-                     legend.position = "none", axis.y = element_text(size = 12)) +
-  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "shan",  
-                     title = "Shannon diversity", x_title = "", y_title = "", 
-                     legend.position = "right", axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, window = "T2", 
+                     taxa = "rich", 
+                     title = "Specific richness", 
+                     x_title = bquote(Pregnancy~"2"^{nd}~trim.~exposure), 
+                     y_title = "", 
+                     legend.position = "none", 
+                     axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "T2", 
+                     taxa = "shan",  
+                     title = "Shannon diversity", 
+                     x_title = "", 
+                     y_title = "", 
+                     legend.position = "right", 
+                     axis.y = element_blank()) + 
   
-  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "rich", 
-                     title = "", x_title = bquote("3"^{rd}~trim.~exposure), y_title = "", 
-                     legend.position = "none", axis.y = element_text(size = 12)) +
-  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "shan",
-                     title = "", x_title = "", y_title = "", 
-                     legend.position = "right", axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "T3", 
+                     taxa = "rich", 
+                     title = "", 
+                     x_title = bquote(Pregnancy~"3"^{rd}~trim.~exposure), 
+                     y_title = "", 
+                     legend.position = "none", 
+                     axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "T3", 
+                     taxa = "shan",
+                     title = "", 
+                     x_title = "", 
+                     y_title = "", 
+                     legend.position = "right", 
+                     axis.y = element_blank()) + 
   
-  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "rich", 
-                     title = "", x_title = "12-month exposure", y_title = "", 
-                     legend.position = "none", axis.y = element_text(size = 12)) +
-  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "shan", 
-                     title = "", x_title = "", y_title = "", 
-                     legend.position = "right", axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "Y1", 
+                     taxa = "rich", 
+                     title = "", 
+                     x_title = "Child 12-month exposure", 
+                     y_title = "", 
+                     legend.position = "none", 
+                     axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "Y1", 
+                     taxa = "shan", 
+                     title = "", 
+                     x_title = "", 
+                     y_title = "", 
+                     legend.position = "right", 
+                     axis.y = element_blank()) + 
   
   plot_layout(ncol = 2, nrow = 3) 
 
@@ -769,44 +833,97 @@ ggsave("4_output/review/Figure_S6.tiff",
 
 ## Figure S7 ----
 Figure_S7 <- 
-  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "p1", 
-                     title = "Phylum Firmicutes", x_title = bquote("2"^{nd}~trim.~exposure), y_title = "", 
-                     legend.position = "none", axis.y = element_text(size = 12)) +
-  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "p2",  
-                     title = "Phylum Actinobacteria", x_title = "", y_title = "", 
-                     legend.position = "none", axis.y = element_blank()) + 
-  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "p3",  
-                     title = "Phylum Bacteroidetes", x_title = "", y_title = "", 
-                     legend.position = "none", axis.y = element_blank()) + 
-  plot_risks.singvar(table_bkmr_singvar, window = "T2", taxa = "p4",  
-                     title = "Phylum Proteobacteria", x_title = "", y_title = "", 
-                     legend.position = "right", axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, window = "T2", 
+                     taxa = "p1", 
+                     title = "Phylum Firmicutes", 
+                     x_title = bquote(Pregnancy~"2"^{nd}~trim.~exposure), 
+                     y_title = "", 
+                     legend.position = "none", 
+                     axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, window = "T2", 
+                     taxa = "p2",  
+                     title = "Phylum Actinobacteria", 
+                     x_title = "", 
+                     y_title = "", 
+                     legend.position = "none", 
+                     axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "T2", 
+                     taxa = "p3",  
+                     title = "Phylum Bacteroidetes", 
+                     x_title = "", y_title = "", 
+                     legend.position = "none", 
+                     axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "T2", taxa = "p4",  
+                     title = "Phylum Proteobacteria", 
+                     x_title = "", 
+                     y_title = "", 
+                     legend.position = "right", 
+                     axis.y = element_blank()) + 
   
-  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "p1", 
-                     title = "", x_title = bquote("3"^{rd}~trim.~exposure), y_title = "", 
-                     legend.position = "none", axis.y = element_text(size = 12)) +
-  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "p2",
-                     title = "", x_title = "", y_title = "", 
-                     legend.position = "none", axis.y = element_blank()) + 
-  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "p3", 
-                     title = "", x_title = "", y_title = "", 
-                     legend.position = "none", axis.y = element_blank()) + 
-  plot_risks.singvar(table_bkmr_singvar, window = "T3", taxa = "p4", 
-                     title = "", x_title = "", y_title = "", 
-                     legend.position = "right", axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, window = "T3", 
+                     taxa = "p1", 
+                     title = "", 
+                     x_title = bquote(Pregnancy~"3"^{rd}~trim.~exposure), 
+                     y_title = "", 
+                     legend.position = "none", 
+                     axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "T3", taxa = "p2",
+                     title = "", x_title = "", 
+                     y_title = "", 
+                     legend.position = "none", 
+                     axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "T3", 
+                     taxa = "p3", 
+                     title = "", 
+                     x_title = "", 
+                     y_title = "", 
+                     legend.position = "none", 
+                     axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "T3", 
+                     taxa = "p4", 
+                     title = "", 
+                     x_title = "", 
+                     y_title = "", 
+                     legend.position = "right", 
+                     axis.y = element_blank()) + 
   
-  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "p1", 
-                     title = "", x_title = "12-month exposure", y_title = "Relative abundance (%)", 
-                     legend.position = "none", axis.y = element_text(size = 12)) +
-  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "p2", 
-                     title = "", x_title = "", y_title = "Relative abundance (%)", 
-                     legend.position = "none", axis.y = element_blank()) + 
-  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "p3", 
-                     title = "", x_title = "", y_title = "Relative abundance (%)", 
-                     legend.position = "none", axis.y = element_blank()) + 
-  plot_risks.singvar(table_bkmr_singvar, window = "Y1", taxa = "p4", 
-                     title = "", x_title = "", y_title = "Relative abundance (%)", 
-                     legend.position = "right", axis.y = element_blank()) +   
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "Y1", 
+                     taxa = "p1", 
+                     title = "", 
+                     x_title = "Child 12-month exposure", 
+                     y_title = "Relative abundance (%)", 
+                     legend.position = "none", 
+                     axis.y = element_text(size = 12)) +
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "Y1", 
+                     taxa = "p2", 
+                     title = "", 
+                     x_title = "", 
+                     y_title = "Relative abundance (%)", 
+                     legend.position = "none", 
+                     axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "Y1", 
+                     taxa = "p3", 
+                     title = "", 
+                     x_title = "", 
+                     y_title = "Relative abundance (%)", 
+                     legend.position = "none", 
+                     axis.y = element_blank()) + 
+  plot_risks.singvar(table_bkmr_singvar, 
+                     window = "Y1", 
+                     taxa = "p4", 
+                     title = "", 
+                     x_title = "", 
+                     y_title = "Relative abundance (%)", 
+                     legend.position = "right", 
+                     axis.y = element_blank()) +   
   
   plot_layout(ncol = 4, nrow = 3) 
 
@@ -846,4 +963,4 @@ rm(bkmr_t2_alpha, bkmr_t3_alpha, bkmr_Y1_alpha,
 save.image("4_output/review/results_review_multipol.RData")
 
 # Récupérer les résultats ----
-load("4_output/review/results_review_multipol.RData")
+load("4_output/review/results_review_multipol (exact).RData")
